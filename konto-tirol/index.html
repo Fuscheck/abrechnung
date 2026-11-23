@@ -735,6 +735,8 @@ bindSettings();
 applyCfg();
 initAuth();
 window.addEventListener("online",()=>{if(dirty.size)flush();});
+if("serviceWorker" in navigator){window.addEventListener("load",()=>{
+  navigator.serviceWorker.register("sw.js").catch(()=>{});});}
 loadLocal();
 bindField("f-abrechnung","abrechnung");
 bindField("f-barIst","barIst");
