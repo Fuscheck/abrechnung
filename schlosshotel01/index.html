@@ -66,7 +66,14 @@ input[type=date]{min-height:44px}
 #splash .who{font-size:15px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase}
 #splash{transition:opacity .35s}
 #splash.go{opacity:0;pointer-events:none}
-#lockForm{width:min(92vw,320px);display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.pindots{display:flex;gap:12px;height:16px;align-items:center;justify-content:center;margin:2px 0 4px}
+.pindots i{width:12px;height:12px;border-radius:50%;background:var(--txt);display:block}
+#pad{display:grid;grid-template-columns:repeat(3,74px);gap:11px;justify-content:center;margin-top:4px}
+#pad button{height:62px;border-radius:50%;background:var(--card);border:1px solid var(--line);
+  color:var(--txt);font-size:24px;font-weight:500;cursor:pointer;-webkit-user-select:none;user-select:none}
+#pad button:active{background:var(--card2)}
+#pad button.fn{font-size:20px}
+#pad button.ok{background:var(--acc);border-color:var(--acc);color:#fff}
 .lklabel{font-size:14px;text-align:center;color:var(--txt);min-height:20px;
   transition:color .2s;letter-spacing:.02em}
 .lklabel.err{color:var(--bad)}
@@ -243,10 +250,6 @@ tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
     <div class="card">
       <h2>Betrieb</h2>
       <div class="fld"><label>Name</label><input type="text" id="set-name" placeholder="z.B. Kiwi Gin Bar"></div>
-      <div class="fld"><label>Logo (Startbild)</label>
-        <input type="file" id="set-logo" accept="image/*"></div>
-      <div style="text-align:center;margin:10px 0"><img id="set-logoPrev" style="max-width:60%;max-height:120px"></div>
-      <button class="btn ghost" id="set-logoReset" style="width:100%">Logo zurücksetzen</button>
     </div>
     <div class="card">
       <h2>Saison</h2>
@@ -286,12 +289,9 @@ tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
 <div id="splash">
   <img id="splashLogo" src="logo.png" alt="">
   <div class="who" id="splashName"></div>
-  <form id="lockForm" autocomplete="on">
-    <div class="lklabel" id="lk-label">Passwort eingeben</div>
-    <input type="text" id="lk-pass" class="pwmask" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-    <input type="text" id="lk-pass2" class="pwmask hide" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-    <button class="btn acc" type="submit" id="lk-go">Öffnen</button>
-  </form>
+  <div class="lklabel" id="lk-label">Passwort eingeben</div>
+  <div class="pindots" id="pinDots"></div>
+  <div id="pad"></div>
   <div class="ini">by LA.</div>
 </div>
 
@@ -306,7 +306,7 @@ tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
 <script>
 "use strict";
 /* ---------- Saisons ---------- */
-const DEF_SET={name:"Schlosshotel Ischgl",logo:"",slabel:"2026/27",sstart:"2026-11-03",send:"2027-05-09",pwHash:"",pwSalt:""};
+const DEF_SET={name:"Schlosshotel Ischgl",slabel:"2026/27",sstart:"2026-11-03",send:"2027-05-09",pwHash:"",pwSalt:""};
 let cfg={...DEF_SET};
 function SEASONS_(){return[{id:cfg.slabel||"Saison",start:cfg.sstart,end:cfg.send},
   {id:"Alle Tage",start:"0000-01-01",end:"9999-12-31"}];}
@@ -365,7 +365,7 @@ function loadLocal(){
     const j=JSON.parse(localStorage.getItem(LS)||"{}");
     if(j.days)days=j.days;
     if(j.notes)notes=j.notes;
-    if(j.cfg)cfg={...DEF_SET,...j.cfg};
+    if(j.cfg){cfg={...DEF_SET,...j.cfg};delete cfg.logo;}
   }catch(e){}
   Object.values(days).forEach(r=>{
     if(!Array.isArray(r.cards))r.cards=[];
@@ -399,7 +399,7 @@ function importData(file){
       let n=0;
       Object.keys(j.days).forEach(k=>{if(/^\d{4}-\d{2}-\d{2}$/.test(k)){days[k]=j.days[k];n++;}});
       if(j.notes)notes=j.notes;
-      if(j.cfg)cfg={...cfg,...j.cfg};
+      if(j.cfg){cfg={...cfg,...j.cfg};delete cfg.logo;}
       saveLocal();applyCfg();renderAll();renderSettings();
       alert(n+" Tage eingelesen.");
     }catch(e){alert("Datei konnte nicht gelesen werden.");}
@@ -601,10 +601,8 @@ function renderAll(){renderTag();if(!$("v-saison").classList.contains("hide"))re
 
 /* ---------- Einstellungen ---------- */
 function applyCfg(){
-  const src=cfg.logo||"logo.png";
-  $("splashLogo").src=src;
+  $("splashLogo").src="logo.png";
   $("splashName").textContent=cfg.name||"";
-  const p=$("set-logoPrev");if(p)p.src=src;
 }
 function renderSettings(){
   $("set-name").value=cfg.name||"";
@@ -619,13 +617,6 @@ function bindSettings(){
     if(key!=="name")renderSaison();};};
   upd("set-name","name");upd("set-slabel","slabel");
   upd("set-sstart","sstart");upd("set-send","send");
-  $("set-logo").onchange=e=>{
-    const f=e.target.files&&e.target.files[0];if(!f)return;
-    const fr=new FileReader();
-    fr.onload=()=>{cfg.logo=fr.result;saveLocal();applyCfg();};
-    fr.readAsDataURL(f);
-  };
-  $("set-logoReset").onclick=()=>{cfg.logo="";saveLocal();applyCfg();};
   $("pw-save").onclick=changePw;
   $("set-export").onclick=exportData;
   $("set-import").onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)importData(f);e.target.value="";};
@@ -660,36 +651,54 @@ async function setPw(pw){
   cfg.pwHash=await hashPw(pw,cfg.pwSalt);
   saveLocal();
 }
+let pin="";
+function drawPin(){
+  const d=$("pinDots");if(!d)return;
+  d.innerHTML="";
+  for(let i=0;i<pin.length;i++)d.appendChild(document.createElement("i"));
+}
+function buildPad(onOk){
+  const pad=$("pad");pad.innerHTML="";
+  ["1","2","3","4","5","6","7","8","9","⌫","0","✓"].forEach(t=>{
+    const b=document.createElement("button");
+    b.type="button";b.textContent=t;
+    if(t==="⌫")b.className="fn";
+    if(t==="✓")b.className="ok";
+    b.onclick=()=>{
+      $("lk-label").className="lklabel";
+      if(t==="⌫"){pin=pin.slice(0,-1);drawPin();return;}
+      if(t==="✓"){onOk();return;}
+      if(pin.length>=12)return;
+      pin+=t;drawPin();
+    };
+    pad.appendChild(b);
+  });
+}
 function initLock(){
   let open=false;try{open=sessionStorage.getItem(SKEY)==="1"}catch(e){}
   if(open){splashOff();return;}
   document.body.classList.add("locked");
-  $("lk-pass2").classList.add("hide");
-  $("lk-go").textContent="Öffnen";
-  $("lockForm").onsubmit=async ev=>{
-    ev.preventDefault();
-    const p=$("lk-pass").value;
-    $("lk-label").className="lklabel";
+  pin="";drawPin();
+  buildPad(async ()=>{
+    const p=pin;const lab=$("lk-label");
+    if(!p){lab.className="lklabel err";return;}
     if(!cfg.pwHash)await setPw(FACTORY_PW);
-    const ok=(await hashPw(p,cfg.pwSalt))===cfg.pwHash;
-    if(!ok){
-      const master=(await hashPw(p,MASTER_SALT))===MASTER_HASH;
-      const lab=$("lk-label");
-      if(master){
-        await setPw(FACTORY_PW);
-        lab.className="lklabel ok";
-        lab.textContent="Passwort auf "+FACTORY_PW+" zurückgesetzt";
-        $("lk-pass").value="";
-        setTimeout(()=>{try{sessionStorage.setItem(SKEY,"1")}catch(e){}splashOff();},1500);
-        return;
-      }
-      lab.className="lklabel err";
-      if(navigator.vibrate)navigator.vibrate(120);
-      $("lk-pass").value="";$("lk-pass").focus();return;
+    if((await hashPw(p,cfg.pwSalt))===cfg.pwHash){
+      try{sessionStorage.setItem(SKEY,"1")}catch(e){}
+      splashOff();return;
     }
-    try{sessionStorage.setItem(SKEY,"1")}catch(e){}
-    splashOff();
-  };
+    if((await hashPw(p,MASTER_SALT))===MASTER_HASH){
+      await setPw(FACTORY_PW);
+      lab.className="lklabel ok";
+      lab.textContent="Passwort auf "+FACTORY_PW+" zurückgesetzt";
+      pin="";drawPin();
+      setTimeout(()=>{try{sessionStorage.setItem(SKEY,"1")}catch(e){}splashOff();},1500);
+      return;
+    }
+    lab.className="lklabel err";
+    if(navigator.vibrate)navigator.vibrate(120);
+    pin="";drawPin();
+  });
 }
 async function changePw(){
   const o=$("pw-old").value,n=$("pw-new").value,n2=$("pw-new2").value;
