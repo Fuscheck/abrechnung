@@ -281,6 +281,7 @@ tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
       <button class="btn ghost" id="set-wipe" style="width:100%;color:var(--bad)">Alle Daten löschen</button>
       <div class="note">Die Daten liegen nur auf diesem Gerät. Exportiere regelmäßig, sonst sind sie beim Gerätewechsel weg. Die Sicherungsdatei ist nicht durch das Passwort geschützt.</div>
     </div>
+    <button class="btn" id="lockBtn" style="width:100%;margin-bottom:10px">Abmelden</button>
   </section>
 
   <div class="sync" id="syncInfo"></div>
@@ -618,6 +619,11 @@ function bindSettings(){
   upd("set-name","name");upd("set-slabel","slabel");
   upd("set-sstart","sstart");upd("set-send","send");
   $("pw-save").onclick=changePw;
+  $("lockBtn").onclick=()=>{
+    saveLocal();
+    try{sessionStorage.removeItem(SKEY)}catch(e){}
+    location.reload();
+  };
   $("set-export").onclick=exportData;
   $("set-import").onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)importData(f);e.target.value="";};
   $("set-wipe").onclick=()=>{

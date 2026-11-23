@@ -1,4 +1,4 @@
-const CACHE="abrechnung-schloss-v7";
+const CACHE="abrechnung-schloss-v8";
 const ASSETS=["./","./index.html","./manifest.webmanifest","./logo.png",
   "./icon-192.png","./icon-512.png","./apple-touch-icon.png"];
 self.addEventListener("install",e=>{
