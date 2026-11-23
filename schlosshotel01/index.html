@@ -25,7 +25,8 @@ h1{font-size:19px;margin:4px 0 12px;font-weight:650}
 .card h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:0 0 10px;font-weight:600}
 label{display:block;font-size:13px;color:var(--dim);margin-bottom:5px}
 input,select,button{font-family:inherit;font-size:16px;color:var(--txt)}
-input[type=text],input[type=number],input[type=date],select{
+.pwmask{-webkit-text-security:disc;text-security:disc;letter-spacing:.3em;text-align:center}
+input[type=text],input[type=number],input[type=date],input[type=password],input[type=email],input[type=file],select{
   width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;
   padding:11px 12px;outline:none;appearance:none}
 input:focus,select:focus{border-color:var(--acc)}
@@ -258,11 +259,11 @@ tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
     <div class="card">
       <h2>Passwort</h2>
       <div class="fld"><label>Aktuelles Passwort</label>
-        <input type="password" id="pw-old" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password"></div>
+        <input type="text" id="pw-old" class="pwmask" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
       <div class="fld"><label>Neues Passwort</label>
-        <input type="password" id="pw-new" inputmode="numeric" pattern="[0-9]*" autocomplete="new-password"></div>
+        <input type="text" id="pw-new" class="pwmask" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
       <div class="fld"><label>Neues Passwort wiederholen</label>
-        <input type="password" id="pw-new2" inputmode="numeric" pattern="[0-9]*" autocomplete="new-password"></div>
+        <input type="text" id="pw-new2" class="pwmask" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
       <button class="btn" id="pw-save" style="width:100%">Passwort ändern</button>
       <div class="note" id="pw-msg"></div>
       <div class="note">Werkspasswort: 0000. Passwort vergessen? Beim Admin melden.</div>
@@ -287,8 +288,8 @@ tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
   <div class="who" id="splashName"></div>
   <form id="lockForm" autocomplete="on">
     <div class="lklabel" id="lk-label">Passwort eingeben</div>
-    <input type="password" id="lk-pass" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password">
-    <input type="password" id="lk-pass2" class="hide" inputmode="numeric" pattern="[0-9]*" autocomplete="new-password">
+    <input type="text" id="lk-pass" class="pwmask" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    <input type="text" id="lk-pass2" class="pwmask hide" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     <button class="btn acc" type="submit" id="lk-go">Öffnen</button>
   </form>
   <div class="ini">by LA.</div>
