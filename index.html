@@ -551,7 +551,10 @@ async function initAuth(){
     const{data:d,error}=await sb.auth.signInWithPassword({
       email:$("lg-mail").value.trim(),password:$("lg-pass").value});
     b.disabled=false;b.textContent="Anmelden";
-    if(error||!d.session){$("lg-err").textContent="E-Mail oder Passwort falsch";$("lg-pass").value="";return;}
+    if(error||!d.session){
+      const m=error?(error.message||""):"keine Sitzung";
+      $("lg-err").textContent=/invalid login/i.test(m)?"E-Mail oder Passwort falsch":("Fehler: "+m);
+      $("lg-pass").value="";return;}
     startSession(d.session);
   };
 }
