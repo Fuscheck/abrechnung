@@ -281,6 +281,7 @@ tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
       <button class="btn ghost" id="set-wipe" style="width:100%;color:var(--bad)">Alle Daten löschen</button>
       <div class="note">Die Daten liegen auf dem Server und erscheinen auf jedem Gerät, auf dem du dich anmeldest. Der Export ist nur eine zusätzliche Sicherung für dich.</div>
     </div>
+    <div class="note" id="verline" style="text-align:center"></div>
   </section>
 
   <div class="sync" id="syncInfo"></div>
@@ -361,6 +362,7 @@ function hasData(r){return !!((+r.abrechnung)||(r.cards||[]).length||(r.gutschei
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
+const APP_VERSION="2026-11-23 23:00";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -442,7 +444,7 @@ async function logout(){
       .forEach(k=>localStorage.removeItem(k));
   }catch(e){}
   days={};notes={};dirty.clear();uid=null;
-  location.reload();
+  location.replace(location.pathname+"?v="+Date.now());
 }
 function saveNotes(){saveLocal();}
 
@@ -676,6 +678,7 @@ function renderSettings(){
   $("set-slabel").value=cfg.slabel||"";
   $("set-sstart").value=cfg.sstart||"";
   $("set-send").value=cfg.send||"";
+  $("verline").textContent="Version "+APP_VERSION;
   $("set-count").textContent=Object.keys(days).filter(k=>hasData(days[k])).length;
   applyCfg();
 }
