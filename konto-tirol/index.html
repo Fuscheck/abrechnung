@@ -362,7 +362,7 @@ function hasData(r){return !!((+r.abrechnung)||(r.cards||[]).length||(r.gutschei
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-23 23:00";
+const APP_VERSION="2026-11-23 23:20";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -428,7 +428,8 @@ async function pullAll(){
 }
 async function startSession(session){
   uid=session.user.id;
-  const el=$("splash");if(el){el.classList.add("go");setTimeout(()=>el.remove(),400);}
+  const el=$("splash");
+  if(el){el.classList.add("go");setTimeout(()=>{el.style.display="none";},400);}
   document.body.classList.remove("locked");
   $("acc-mail").textContent=session.user.email||"–";
   setSync("lade …");
@@ -444,7 +445,7 @@ async function logout(){
       .forEach(k=>localStorage.removeItem(k));
   }catch(e){}
   days={};notes={};dirty.clear();uid=null;
-  location.replace(location.pathname+"?v="+Date.now());
+  showLogin();
 }
 function saveNotes(){saveLocal();}
 
@@ -698,12 +699,22 @@ function bindSettings(){
   };
 }
 /* ---------- Anmeldung ---------- */
+function showLogin(){
+  const el=$("splash");
+  if(el){el.style.display="";el.offsetHeight;el.classList.remove("go");}
+  document.body.classList.add("locked");
+  $("lg-pass").value="";
+  $("lk-label").className="lklabel";
+  $("lk-label").textContent="Anmelden";
+  $("acc-mail").textContent="–";
+  setSync("");
+  show("tag");renderAll();
+  window.scrollTo(0,0);
+}
 async function initAuth(){
   document.body.classList.add("locked");
   try{sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});}
   catch(e){$("lk-label").className="lklabel err";$("lk-label").textContent="Keine Verbindung";return;}
-  const{data}=await sb.auth.getSession();
-  if(data&&data.session){startSession(data.session);return;}
   $("loginForm").onsubmit=async ev=>{
     ev.preventDefault();
     const lab=$("lk-label"),b=$("lg-go");
@@ -718,6 +729,8 @@ async function initAuth(){
     }
     startSession(d.session);
   };
+  const{data}=await sb.auth.getSession();
+  if(data&&data.session)startSession(data.session);
 }
 
 async function changePw(){
