@@ -127,15 +127,15 @@ tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
     </div>
 
     <div class="card">
-      <h2>Gutschein &amp; offene Rechnungen</h2>
-      <div class="fld"><label>Gutschein</label>
-        <input type="text" inputmode="decimal" id="f-gutschein" placeholder="0,00"></div>
-      <div class="grid2">
-        <div class="fld"><label>Offene Rechnung 1</label>
-          <input type="text" inputmode="decimal" id="f-or1" placeholder="0,00"></div>
-        <div class="fld"><label>Offene Rechnung 2</label>
-          <input type="text" inputmode="decimal" id="f-or2" placeholder="0,00"></div>
-      </div>
+      <h2>Gutscheine <span id="gutCount" style="float:right;text-transform:none;letter-spacing:0"></span></h2>
+      <div class="cards-list" id="gutList"></div>
+      <button class="btn" id="addGut" style="width:100%">+ Gutschein</button>
+    </div>
+
+    <div class="card">
+      <h2>Offene Rechnungen <span id="recCount" style="float:right;text-transform:none;letter-spacing:0"></span></h2>
+      <div class="cards-list" id="recList"></div>
+      <button class="btn" id="addRec" style="width:100%">+ Rechnung</button>
     </div>
 
     <div class="card">
@@ -283,7 +283,10 @@ function dateLabel(s){const d=parseISO(s);
 function seasonOf(k){return SEASONS.find(s=>k>=s.start&&k<=s.end)||SEASONS[0];}
 
 /* ---------- State ---------- */
-const BLANK=()=>({abrechnung:0,cards:[],gutschein:0,or1:0,or2:0,trinkgeld:0});
+const BLANK=()=>({abrechnung:0,cards:[],gutscheine:[],rechnungen:[],trinkgeld:0});
+const LISTS={cards:"cards",gutscheine:"gutscheine",rechnungen:"rechnungen"};
+const sumL=a=>(a||[]).reduce((x,y)=>x+(+y||0),0);
+const cntL=a=>(a||[]).filter(v=>+v>0).length;
 let days={};            // key -> record
 let cur=iso(new Date());
 let db=null, uid=null, dirty=new Set(), savingTimer=null;
@@ -291,13 +294,13 @@ let notes={}, curSeason=seasonOf(cur).id;
 
 function rec(k){return days[k]||BLANK();}
 function calc(r){
-  const karten=(r.cards||[]).reduce((a,b)=>a+(+b||0),0);
-  const abzug=(+r.gutschein||0)+(+r.or1||0)+(+r.or2||0);
+  const karten=sumL(r.cards),gut=sumL(r.gutscheine),rech=sumL(r.rechnungen);
+  const abzug=gut+rech;
   const bar=(+r.abrechnung||0)-karten-abzug;
   const tgp=(+r.abrechnung||0)?(+r.trinkgeld||0)/(+r.abrechnung):0;
-  return{karten,abzug,bar,tgp,n:(r.cards||[]).filter(v=>+v>0).length};
+  return{karten,gut,rech,abzug,bar,tgp,n:cntL(r.cards),nG:cntL(r.gutscheine),nR:cntL(r.rechnungen)};
 }
-function hasData(r){return !!((+r.abrechnung)||(r.cards||[]).length||(+r.trinkgeld)||(+r.gutschein)||(+r.or1)||(+r.or2));}
+function hasData(r){return !!((+r.abrechnung)||(r.cards||[]).length||(r.gutscheine||[]).length||(r.rechnungen||[]).length||(+r.trinkgeld));}
 
 /* ---------- Persistence (Supabase) ---------- */
 const SB_URL="https://pjfsbayqdxfszlejcivq.supabase.co";
@@ -308,7 +311,13 @@ let sb=null;
 
 function saveLocal(){try{localStorage.setItem(LS,JSON.stringify({days,notes}))}catch(e){}}
 function loadLocal(){try{const j=JSON.parse(localStorage.getItem(LS)||"{}");
-  if(j.days)days=j.days;if(j.notes)notes=j.notes;}catch(e){}}
+  if(j.days){days=j.days;
+    Object.values(days).forEach(r=>{
+      if(!r.gutscheine){r.gutscheine=(+r.gutschein>0)?[+r.gutschein]:[];}
+      if(!r.rechnungen){r.rechnungen=[];if(+r.or1>0)r.rechnungen.push(+r.or1);if(+r.or2>0)r.rechnungen.push(+r.or2);}
+      delete r.gutschein;delete r.or1;delete r.or2;
+    });}
+  if(j.notes)notes=j.notes;}catch(e){}}
 function setSync(t){$("syncInfo").textContent=t;}
 
 function markDirty(k){dirty.add(k);saveLocal();scheduleSave();}
@@ -321,8 +330,10 @@ async function flush(){
   keys.forEach(k=>{
     const r=days[k];
     if(r&&hasData(r))up.push({user_id:uid,day:k,abrechnung:+r.abrechnung||0,
-      cards:(r.cards||[]).map(Number),gutschein:+r.gutschein||0,
-      or1:+r.or1||0,or2:+r.or2||0,trinkgeld:+r.trinkgeld||0,updated_at:new Date().toISOString()});
+      cards:(r.cards||[]).map(Number),
+      gutscheine:(r.gutscheine||[]).map(Number),rechnungen:(r.rechnungen||[]).map(Number),
+      gutschein:sumL(r.gutscheine),or1:sumL(r.rechnungen),or2:0,
+      trinkgeld:+r.trinkgeld||0,updated_at:new Date().toISOString()});
     else del.push(k);
   });
   try{
@@ -335,10 +346,14 @@ async function flush(){
   }
 }
 
+function arr(v){if(typeof v==="string"){try{v=JSON.parse(v)}catch(e){v=[]}}
+  return Array.isArray(v)?v.map(Number):[];}
 function rowToRec(r){
-  let c=r.cards;if(typeof c==="string"){try{c=JSON.parse(c)}catch(e){c=[]}}
-  return{abrechnung:+r.abrechnung||0,cards:(c||[]).map(Number),gutschein:+r.gutschein||0,
-    or1:+r.or1||0,or2:+r.or2||0,trinkgeld:+r.trinkgeld||0};
+  let g=arr(r.gutscheine),re=arr(r.rechnungen);
+  if(!g.length&&+r.gutschein>0)g=[+r.gutschein];
+  if(!re.length){if(+r.or1>0)re.push(+r.or1);if(+r.or2>0)re.push(+r.or2);}
+  return{abrechnung:+r.abrechnung||0,cards:arr(r.cards),gutscheine:g,rechnungen:re,
+    trinkgeld:+r.trinkgeld||0};
 }
 
 async function pullAll(){
@@ -377,28 +392,37 @@ function renderTag(){
   const r=rec(cur);
   $("f-abrechnung").value=r.abrechnung?nf.format(r.abrechnung):"";
   $("f-trinkgeld").value=r.trinkgeld?nf.format(r.trinkgeld):"";
-  $("f-gutschein").value=r.gutschein?nf.format(r.gutschein):"";
-  $("f-or1").value=r.or1?nf.format(r.or1):"";
-  $("f-or2").value=r.or2?nf.format(r.or2):"";
-  renderCards();renderOut();
+  renderList("cards","cardsList","addCard");
+  renderList("gutscheine","gutList","addGut");
+  renderList("rechnungen","recList","addRec");
+  renderOut();
 }
-function renderCards(){
-  const r=rec(cur),list=$("cardsList");
+function renderList(field,listId,addId){
+  const r=rec(cur),list=$(listId);
   list.innerHTML="";
-  (r.cards||[]).forEach((v,i)=>{
+  (r[field]||[]).forEach((v,i)=>{
     const div=document.createElement("div");div.className="cardrow";
     const idx=document.createElement("div");idx.className="idx";idx.textContent=(i+1)+".";
     const inp=document.createElement("input");
     inp.type="text";inp.inputMode="decimal";inp.placeholder="0,00";
     inp.value=v?nf.format(v):"";
-    inp.oninput=()=>{const rr=ensure(cur);rr.cards[i]=num(inp.value);markDirty(cur);renderOut();};
-    const del=document.createElement("button");del.className="del";del.textContent="✕";
-    del.onclick=()=>{const rr=ensure(cur);rr.cards.splice(i,1);markDirty(cur);renderCards();renderOut();};
+    inp.oninput=()=>{ensure(cur)[field][i]=num(inp.value);markDirty(cur);renderOut();};
+    const del=document.createElement("button");del.className="del";del.textContent="\u2715";
+    del.onclick=()=>{ensure(cur)[field].splice(i,1);markDirty(cur);
+      renderList(field,listId,addId);renderOut();};
     div.append(idx,inp,del);list.appendChild(div);
   });
-  $("addCard").style.display=(r.cards||[]).length>=MAXCARDS?"none":"block";
+  $(addId).style.display=(r[field]||[]).length>=MAXCARDS?"none":"block";
 }
-function ensure(k){if(!days[k])days[k]=BLANK();if(!days[k].cards)days[k].cards=[];return days[k];}
+function addTo(field,listId,addId){
+  const r=ensure(cur);
+  if(r[field].length>=MAXCARDS)return;
+  r[field].push(0);renderList(field,listId,addId);
+  const ins=$(listId).querySelectorAll("input");if(ins.length)ins[ins.length-1].focus();
+}
+function ensure(k){if(!days[k])days[k]=BLANK();
+  Object.keys(LISTS).forEach(f=>{if(!Array.isArray(days[k][f]))days[k][f]=[];});
+  return days[k];}
 function renderOut(){
   const r=rec(cur),c=calc(r);
   $("o-karten").textContent=eur(c.karten);
@@ -407,6 +431,8 @@ function renderOut(){
   bar.className="big "+(c.bar<-0.005?"neg":c.bar>0.005?"pos":"");
   $("o-tgp").textContent=pct(c.tgp);
   $("cardCount").textContent=c.n?c.n+"×":"";
+  $("gutCount").textContent=c.nG?c.nG+"×":"";
+  $("recCount").textContent=c.nR?c.nR+"×":"";
 }
 function bindField(id,key){
   const el=$(id);
@@ -441,8 +467,8 @@ function renderSaison(){
     tb.appendChild(tr);
   });
   keys.forEach(k=>{const r=days[k],c=calc(r);
-    A+=+r.abrechnung||0;K+=c.karten;B+=c.bar;G+=+r.gutschein||0;
-    O+=(+r.or1||0)+(+r.or2||0);T+=+r.trinkgeld||0;if(+r.abrechnung>0)n++;});
+    A+=+r.abrechnung||0;K+=c.karten;B+=c.bar;G+=c.gut;
+    O+=c.rech;T+=+r.trinkgeld||0;if(+r.abrechnung>0)n++;});
   $("sTitle").textContent="Summe "+curSeason;
   $("s-abr").textContent=eur(A);$("s-karten").textContent=eur(K);
   $("s-bar").textContent=eur(B);$("s-gut").textContent=eur(G);
@@ -460,9 +486,8 @@ function renderBericht(){
     if(k<von||k>bis)return;
     const r=days[k],c=calc(r);
     U+=+r.abrechnung||0;KZ+=c.karten;KN+=c.n;
-    G+=+r.gutschein||0;if(+r.gutschein>0)GN++;
-    O+=(+r.or1||0)+(+r.or2||0);
-    if(+r.or1>0)ON++;if(+r.or2>0)ON++;
+    G+=c.gut;GN+=c.nG;
+    O+=c.rech;ON+=c.nR;
     T+=+r.trinkgeld||0;
   });
   const ohne=U-KZ,ende=ohne-G-O;
@@ -571,11 +596,9 @@ initAuth();
 loadLocal();
 bindField("f-abrechnung","abrechnung");
 bindField("f-trinkgeld","trinkgeld");
-bindField("f-gutschein","gutschein");
-bindField("f-or1","or1");
-bindField("f-or2","or2");
-$("addCard").onclick=()=>{const r=ensure(cur);if(r.cards.length<MAXCARDS){r.cards.push(0);renderCards();
-  const ins=$("cardsList").querySelectorAll("input");if(ins.length)ins[ins.length-1].focus();}};
+$("addCard").onclick=()=>addTo("cards","cardsList","addCard");
+$("addGut").onclick=()=>addTo("gutscheine","gutList","addGut");
+$("addRec").onclick=()=>addTo("rechnungen","recList","addRec");
 $("dPrev").onclick=()=>{cur=addDays(cur,-1);renderTag();};
 $("dNext").onclick=()=>{cur=addDays(cur,1);renderTag();};
 $("dToday").onclick=()=>{cur=iso(new Date());renderTag();};
