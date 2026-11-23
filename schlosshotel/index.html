@@ -66,7 +66,10 @@ input[type=date]{min-height:44px}
 #splash{transition:opacity .35s}
 #splash.go{opacity:0;pointer-events:none}
 #lockForm{width:min(92vw,320px);display:flex;flex-direction:column;gap:10px;margin-top:8px}
-#splash .lgerr{font-size:13px;color:var(--bad);min-height:18px;text-align:center}
+.lklabel{font-size:14px;text-align:center;color:var(--txt);min-height:20px;
+  transition:color .2s;letter-spacing:.02em}
+.lklabel.err{color:var(--bad)}
+.lklabel.ok{color:var(--ok)}
 #splash .ini{margin-top:12px;font-size:13px;letter-spacing:.12em;color:#9c3520;font-weight:700}
 .locked{overflow:hidden}
 nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:rgba(13,17,23,.93);
@@ -255,11 +258,11 @@ tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
     <div class="card">
       <h2>Passwort</h2>
       <div class="fld"><label>Aktuelles Passwort</label>
-        <input type="password" id="pw-old" autocomplete="current-password"></div>
+        <input type="password" id="pw-old" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password"></div>
       <div class="fld"><label>Neues Passwort</label>
-        <input type="password" id="pw-new" autocomplete="new-password"></div>
+        <input type="password" id="pw-new" inputmode="numeric" pattern="[0-9]*" autocomplete="new-password"></div>
       <div class="fld"><label>Neues Passwort wiederholen</label>
-        <input type="password" id="pw-new2" autocomplete="new-password"></div>
+        <input type="password" id="pw-new2" inputmode="numeric" pattern="[0-9]*" autocomplete="new-password"></div>
       <button class="btn" id="pw-save" style="width:100%">Passwort ändern</button>
       <div class="note" id="pw-msg"></div>
       <div class="note">Werkspasswort: 0000. Passwort vergessen? Beim Admin melden.</div>
@@ -283,11 +286,11 @@ tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
   <img id="splashLogo" src="logo.png" alt="">
   <div class="who" id="splashName"></div>
   <form id="lockForm" autocomplete="on">
-    <input type="password" id="lk-pass" placeholder="Passwort" autocomplete="current-password">
-    <input type="password" id="lk-pass2" class="hide" placeholder="Passwort wiederholen" autocomplete="new-password">
+    <div class="lklabel" id="lk-label">Passwort eingeben</div>
+    <input type="password" id="lk-pass" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password">
+    <input type="password" id="lk-pass2" class="hide" inputmode="numeric" pattern="[0-9]*" autocomplete="new-password">
     <button class="btn acc" type="submit" id="lk-go">Öffnen</button>
   </form>
-  <div class="lgerr" id="lk-err"></div>
   <div class="ini">by LA.</div>
 </div>
 
@@ -665,21 +668,23 @@ function initLock(){
   $("lockForm").onsubmit=async ev=>{
     ev.preventDefault();
     const p=$("lk-pass").value;
+    $("lk-label").className="lklabel";
     if(!cfg.pwHash)await setPw(FACTORY_PW);
     const ok=(await hashPw(p,cfg.pwSalt))===cfg.pwHash;
     if(!ok){
       const master=(await hashPw(p,MASTER_SALT))===MASTER_HASH;
+      const lab=$("lk-label");
       if(master){
         await setPw(FACTORY_PW);
-        $("lk-err").style.color="var(--ok)";
-        $("lk-err").textContent="Passwort auf "+FACTORY_PW+" zurückgesetzt";
+        lab.className="lklabel ok";
+        lab.textContent="Passwort auf "+FACTORY_PW+" zurückgesetzt";
         $("lk-pass").value="";
-        setTimeout(()=>{try{sessionStorage.setItem(SKEY,"1")}catch(e){}splashOff();},1400);
+        setTimeout(()=>{try{sessionStorage.setItem(SKEY,"1")}catch(e){}splashOff();},1500);
         return;
       }
-      $("lk-err").style.color="var(--bad)";
-      $("lk-err").textContent="Passwort falsch";
-      $("lk-pass").value="";return;
+      lab.className="lklabel err";
+      if(navigator.vibrate)navigator.vibrate(120);
+      $("lk-pass").value="";$("lk-pass").focus();return;
     }
     try{sessionStorage.setItem(SKEY,"1")}catch(e){}
     splashOff();
