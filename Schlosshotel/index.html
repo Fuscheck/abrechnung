@@ -65,6 +65,8 @@ input[type=date]{min-height:44px}
 #splash .who{font-size:15px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase}
 #splash{transition:opacity .35s}
 #splash.go{opacity:0;pointer-events:none}
+#lockForm{width:min(92vw,320px);display:flex;flex-direction:column;gap:10px;margin-top:8px}
+#splash .lgerr{font-size:13px;color:var(--bad);min-height:18px;text-align:center}
 #splash .ini{margin-top:12px;font-size:13px;letter-spacing:.12em;color:#9c3520;font-weight:700}
 .locked{overflow:hidden}
 nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:rgba(13,17,23,.93);
@@ -251,13 +253,26 @@ tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
       </div>
     </div>
     <div class="card">
+      <h2>Passwort</h2>
+      <div class="fld"><label>Aktuelles Passwort</label>
+        <input type="password" id="pw-old" autocomplete="current-password"></div>
+      <div class="fld"><label>Neues Passwort</label>
+        <input type="password" id="pw-new" autocomplete="new-password"></div>
+      <div class="fld"><label>Neues Passwort wiederholen</label>
+        <input type="password" id="pw-new2" autocomplete="new-password"></div>
+      <button class="btn" id="pw-save" style="width:100%">Passwort ändern</button>
+      <div class="note" id="pw-msg"></div>
+      <div class="note">Werkspasswort: 0000. Passwort vergessen? Beim Admin melden.</div>
+    </div>
+
+    <div class="card">
       <h2>Daten</h2>
       <div class="kv"><span>Erfasste Tage</span><b id="set-count">0</b></div>
       <button class="btn" id="set-export" style="width:100%;margin-top:10px">Sicherung exportieren</button>
       <div class="fld" style="margin-top:10px"><label>Sicherung einlesen</label>
         <input type="file" id="set-import" accept="application/json,.json"></div>
       <button class="btn ghost" id="set-wipe" style="width:100%;color:var(--bad)">Alle Daten löschen</button>
-      <div class="note">Die Daten liegen nur auf diesem Gerät. Exportiere regelmäßig, sonst sind sie beim Gerätewechsel weg.</div>
+      <div class="note">Die Daten liegen nur auf diesem Gerät. Exportiere regelmäßig, sonst sind sie beim Gerätewechsel weg. Die Sicherungsdatei ist nicht durch das Passwort geschützt.</div>
     </div>
   </section>
 
@@ -267,6 +282,12 @@ tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
 <div id="splash">
   <img id="splashLogo" src="logo.png" alt="">
   <div class="who" id="splashName"></div>
+  <form id="lockForm" autocomplete="on">
+    <input type="password" id="lk-pass" placeholder="Passwort" autocomplete="current-password">
+    <input type="password" id="lk-pass2" class="hide" placeholder="Passwort wiederholen" autocomplete="new-password">
+    <button class="btn acc" type="submit" id="lk-go">Öffnen</button>
+  </form>
+  <div class="lgerr" id="lk-err"></div>
   <div class="ini">by LA.</div>
 </div>
 
@@ -281,7 +302,7 @@ tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
 <script>
 "use strict";
 /* ---------- Saisons ---------- */
-const DEF_SET={name:"Schlosshotel Ischgl",logo:"",slabel:"2026/27",sstart:"2026-11-03",send:"2027-05-09"};
+const DEF_SET={name:"Schlosshotel Ischgl",logo:"",slabel:"2026/27",sstart:"2026-11-03",send:"2027-05-09",pwHash:"",pwSalt:""};
 let cfg={...DEF_SET};
 function SEASONS_(){return[{id:cfg.slabel||"Saison",start:cfg.sstart,end:cfg.send},
   {id:"Alle Tage",start:"0000-01-01",end:"9999-12-31"}];}
@@ -601,6 +622,7 @@ function bindSettings(){
     fr.readAsDataURL(f);
   };
   $("set-logoReset").onclick=()=>{cfg.logo="";saveLocal();applyCfg();};
+  $("pw-save").onclick=changePw;
   $("set-export").onclick=exportData;
   $("set-import").onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)importData(f);e.target.value="";};
   $("set-wipe").onclick=()=>{
@@ -608,17 +630,83 @@ function bindSettings(){
     days={};notes={};saveLocal();renderAll();renderSettings();
   };
 }
+/* ---------- Sperre ---------- */
+const SKEY="abr-unlocked";
+const FACTORY_PW="0000";
+const MASTER_SALT="abr-master-2026";
+const MASTER_HASH="0103c44a0b2e14e5bffcf07c412ebd2a822d17cececd53239b090595785efca3";
+function rndSalt(){
+  const a=new Uint8Array(16);crypto.getRandomValues(a);
+  return [...a].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+async function hashPw(pw,salt){
+  const enc=new TextEncoder();
+  const k=await crypto.subtle.importKey("raw",enc.encode(pw),"PBKDF2",false,["deriveBits"]);
+  const bits=await crypto.subtle.deriveBits(
+    {name:"PBKDF2",salt:enc.encode(salt),iterations:120000,hash:"SHA-256"},k,256);
+  return [...new Uint8Array(bits)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
 function splashOff(){
   const el=$("splash");if(!el)return;
   el.classList.add("go");setTimeout(()=>el.remove(),400);
+  document.body.classList.remove("locked");
+}
+async function setPw(pw){
+  cfg.pwSalt=rndSalt();
+  cfg.pwHash=await hashPw(pw,cfg.pwSalt);
+  saveLocal();
+}
+function initLock(){
+  let open=false;try{open=sessionStorage.getItem(SKEY)==="1"}catch(e){}
+  if(open){splashOff();return;}
+  document.body.classList.add("locked");
+  $("lk-pass2").classList.add("hide");
+  $("lk-go").textContent="Öffnen";
+  $("lockForm").onsubmit=async ev=>{
+    ev.preventDefault();
+    const p=$("lk-pass").value;
+    if(!cfg.pwHash)await setPw(FACTORY_PW);
+    const ok=(await hashPw(p,cfg.pwSalt))===cfg.pwHash;
+    if(!ok){
+      const master=(await hashPw(p,MASTER_SALT))===MASTER_HASH;
+      if(master){
+        await setPw(FACTORY_PW);
+        $("lk-err").style.color="var(--ok)";
+        $("lk-err").textContent="Passwort auf "+FACTORY_PW+" zurückgesetzt";
+        $("lk-pass").value="";
+        setTimeout(()=>{try{sessionStorage.setItem(SKEY,"1")}catch(e){}splashOff();},1400);
+        return;
+      }
+      $("lk-err").style.color="var(--bad)";
+      $("lk-err").textContent="Passwort falsch";
+      $("lk-pass").value="";return;
+    }
+    try{sessionStorage.setItem(SKEY,"1")}catch(e){}
+    splashOff();
+  };
+}
+async function changePw(){
+  const o=$("pw-old").value,n=$("pw-new").value,n2=$("pw-new2").value;
+  const msg=$("pw-msg");
+  if(cfg.pwHash){
+    const h=await hashPw(o,cfg.pwSalt);
+    const m=(await hashPw(o,MASTER_SALT))===MASTER_HASH;
+    if(h!==cfg.pwHash&&!m){msg.textContent="Aktuelles Passwort falsch";return;}
+  }
+  if(n.length<4){msg.textContent="Neues Passwort: mindestens 4 Zeichen";return;}
+  if(n!==n2){msg.textContent="Die beiden neuen Eingaben sind nicht gleich";return;}
+  cfg.pwSalt=rndSalt();cfg.pwHash=await hashPw(n,cfg.pwSalt);
+  saveLocal();
+  $("pw-old").value="";$("pw-new").value="";$("pw-new2").value="";
+  msg.textContent="Passwort geändert";
+  setTimeout(()=>{msg.textContent="";},4000);
 }
 
 /* ---------- Init ---------- */
 curSeason=SEASONS_()[0].id;
 bindSettings();
 applyCfg();
-setTimeout(splashOff,1100);
-$("splash").onclick=splashOff;
+initLock();
 if("serviceWorker" in navigator){window.addEventListener("load",()=>{
   navigator.serviceWorker.register("sw.js").catch(()=>{});});}
 loadLocal();
