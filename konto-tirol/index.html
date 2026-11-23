@@ -362,7 +362,7 @@ function hasData(r){return !!((+r.abrechnung)||(r.cards||[]).length||(r.gutschei
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-23 23:20";
+const APP_VERSION="2026-11-23 23:35";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -659,7 +659,7 @@ function show(v){
   ["tag","saison","bericht","scheine","mehr"].forEach(x=>{
     $("v-"+x).classList.toggle("hide",x!==v);
   });
-  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+  document.querySelectorAll("nav button[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
   if(v==="saison")renderSaison();
   if(v==="bericht")renderBericht();
   if(v==="scheine")renderNotes();
@@ -763,7 +763,7 @@ $("dPrev").onclick=()=>{cur=addDays(cur,-1);renderTag();};
 $("dNext").onclick=()=>{cur=addDays(cur,1);renderTag();};
 $("dToday").onclick=()=>{cur=iso(new Date());renderTag();};
 $("dPick").onchange=e=>{if(e.target.value){cur=e.target.value;renderTag();}};
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.v));
+document.querySelectorAll("nav button[data-v]").forEach(b=>b.onclick=()=>show(b.dataset.v));
 $("b-woche").onclick=()=>{const d=parseISO(iso(new Date()));const wd=(d.getDay()+6)%7;
   $("b-von").value=addDays(iso(d),-wd);$("b-bis").value=addDays(iso(d),6-wd);renderBericht();};
 $("b-monat").onclick=()=>{const d=new Date();
