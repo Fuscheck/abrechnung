@@ -8,8 +8,8 @@
 <meta name="theme-color" content="#0d1117">
 <title>Abrechnung</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -26,7 +26,15 @@ h1{font-size:19px;margin:4px 0 12px;font-weight:650}
 .card h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:0 0 10px;font-weight:600}
 label{display:block;font-size:13px;color:var(--dim);margin-bottom:5px}
 input,select,button{font-family:inherit;font-size:16px;color:var(--txt)}
-input[type=text],input[type=number],input[type=date],select{
+.pwmask{-webkit-text-security:disc;text-security:disc;letter-spacing:.3em;text-align:center}
+.pwmask.show{-webkit-text-security:none;text-security:none}
+.pwrow{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.pwrow span{flex:1;font-size:13px;color:var(--dim)}
+.pwrow input{flex:0 0 150px;width:150px}
+.pwmsg{min-height:20px;font-size:13px;text-align:center;margin-top:8px}
+.pwmsg.err{color:var(--bad)}
+.pwmsg.ok{color:var(--ok)}
+input[type=text],input[type=number],input[type=date],input[type=password],input[type=email],input[type=file],select{
   width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;
   padding:11px 12px;outline:none;appearance:none}
 input:focus,select:focus{border-color:var(--acc)}
@@ -60,20 +68,25 @@ input[type=date]{min-height:44px}
 .kv b{font-size:17px;font-variant-numeric:tabular-nums;font-weight:650}
 .kv b.big{font-size:22px}
 .pos{color:var(--ok)}.neg{color:var(--bad)}.wa{color:var(--warn)}
-#login{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;
+#splash{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;
   flex-direction:column;align-items:center;justify-content:center;padding:24px 20px calc(24px + env(safe-area-inset-bottom));gap:14px}
-#login img{width:min(72vw,260px);height:auto;margin-bottom:2px}
-#login .who{font-size:15px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase}
+#splash img{width:min(72vw,260px);height:auto;margin-bottom:2px}
+#splash .who{font-size:15px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase}
+#splash{transition:opacity .35s}
+#splash.go{opacity:0;pointer-events:none}
 #loginForm{width:min(92vw,330px);display:flex;flex-direction:column;gap:10px;margin-top:6px}
-#loginForm .btn{margin-top:4px}
-#login .lgerr{font-size:13px;color:var(--bad);min-height:18px;text-align:center}
-#login .ini{margin-top:12px;font-size:13px;letter-spacing:.12em;color:#9c3520;font-weight:700}
+.lklabel{font-size:14px;text-align:center;color:var(--txt);min-height:20px;
+  transition:color .2s;letter-spacing:.02em}
+.lklabel.err{color:var(--bad)}
+.lklabel.ok{color:var(--ok)}
+#splash .ini{margin-top:12px;font-size:13px;letter-spacing:.12em;color:#9c3520;font-weight:700}
 .locked{overflow:hidden}
 nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:rgba(13,17,23,.93);
   backdrop-filter:blur(12px);border-top:1px solid var(--line);
   padding-bottom:env(safe-area-inset-bottom);z-index:20}
 nav button{flex:1;background:none;border:none;padding:11px 2px 9px;color:var(--dim);font-size:11px;cursor:pointer}
-nav button i{display:block;font-size:20px;font-style:normal;margin-bottom:2px}
+nav button i{display:block;font-size:19px;font-style:normal;margin-bottom:2px}
+nav button{font-size:10px}
 nav button.on{color:var(--acc)}
 table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
 th,td{text-align:right;padding:7px 4px;font-size:13px;border-bottom:1px solid var(--line)}
@@ -171,7 +184,6 @@ tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
       </table>
       <div class="note" id="sEmpty"></div>
     </div>
-    <button class="btn ghost" id="logoutBtn" style="width:100%;margin-bottom:10px">Abmelden</button>
   </section>
 
   <!-- ============ BERICHT ============ -->
@@ -235,18 +247,55 @@ tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
     </div>
   </section>
 
+  <section id="v-mehr" class="hide">
+    <h1>Einstellungen</h1>
+    <div class="card">
+      <h2>Betrieb</h2>
+      <div class="fld"><label>Name</label><input type="text" id="set-name" placeholder="z.B. Kiwi Gin Bar"></div>
+    </div>
+    <div class="card">
+      <h2>Saison</h2>
+      <div class="fld"><label>Bezeichnung</label><input type="text" id="set-slabel" placeholder="2026/27"></div>
+      <div class="grid2">
+        <div class="fld"><label>Start</label><input type="date" id="set-sstart"></div>
+        <div class="fld"><label>Ende</label><input type="date" id="set-send"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Konto</h2>
+      <div class="kv"><span>Angemeldet als</span><b id="acc-mail" style="font-size:14px">–</b></div>
+      <div class="pwrow" style="margin-top:12px"><span>1. Neues Passwort</span>
+        <input type="password" id="pw-new" autocomplete="new-password"></div>
+      <div class="pwrow"><span>2. Neues Passwort wiederholen</span>
+        <input type="password" id="pw-new2" autocomplete="new-password"></div>
+      <button class="btn acc" id="pw-save" style="width:100%;margin-top:8px">Passwort ändern</button>
+      <div class="pwmsg" id="pw-msg"></div>
+    </div>
+
+    <div class="card">
+      <h2>Daten</h2>
+      <div class="kv"><span>Erfasste Tage</span><b id="set-count">0</b></div>
+      <button class="btn" id="set-export" style="width:100%;margin-top:10px">Sicherung exportieren</button>
+      <div class="fld" style="margin-top:10px"><label>Sicherung einlesen</label>
+        <input type="file" id="set-import" accept="application/json,.json"></div>
+      <button class="btn ghost" id="set-wipe" style="width:100%;color:var(--bad)">Alle Daten löschen</button>
+      <div class="note">Die Daten liegen auf dem Server und erscheinen auf jedem Gerät, auf dem du dich anmeldest. Der Export ist nur eine zusätzliche Sicherung für dich.</div>
+    </div>
+    <div class="note" id="verline" style="text-align:center"></div>
+  </section>
+
   <div class="sync" id="syncInfo"></div>
 </div>
 
-<div id="login">
-  <img src="logo.png" alt="Kiwi Specialized Gin Bar">
-  <div class="who">Emma</div>
+<div id="splash">
+  <img id="splashLogo" src="logo.png" alt="">
+  <div class="who" id="splashName"></div>
   <form id="loginForm" autocomplete="on">
-    <input type="email" id="lg-mail" placeholder="E-Mail" autocomplete="username" value="emma@kiwi.local">
+    <div class="lklabel" id="lk-label">Anmelden</div>
+    <input type="email" id="lg-mail" placeholder="E-Mail" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false">
     <input type="password" id="lg-pass" placeholder="Passwort" autocomplete="current-password">
     <button class="btn acc" type="submit" id="lg-go">Anmelden</button>
   </form>
-  <div class="lgerr" id="lg-err"></div>
   <div class="ini">by LA.</div>
 </div>
 
@@ -255,15 +304,17 @@ tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
   <button data-v="saison"><i>📊</i>Saison</button>
   <button data-v="bericht"><i>🧾</i>Bericht</button>
   <button data-v="scheine"><i>💶</i>Scheine</button>
+  <button data-v="mehr"><i>⚙️</i>Mehr</button>
+  <button id="navLock"><i>🔒</i>Abmelden</button>
 </nav>
 
 <script>
 "use strict";
 /* ---------- Saisons ---------- */
-const SEASONS=[
-  {id:"2026/27",start:"2026-11-03",end:"2027-05-09"},
-  {id:"2025/26",start:"2025-11-25",end:"2026-05-09"}
-];
+const DEF_SET={name:"",slabel:"2026/27",sstart:"2026-11-03",send:"2027-05-09",pwHash:"",pwSalt:""};
+let cfg={...DEF_SET};
+function SEASONS_(){return[{id:cfg.slabel||"Saison",start:cfg.sstart,end:cfg.send},
+  {id:"Alle Tage",start:"0000-01-01",end:"9999-12-31"}];}
 const DAYNAMES=["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
 const MAXCARDS=20;
 const DENOMS=[200,100,50,20,10,5];
@@ -284,7 +335,7 @@ function kw(s){const d=parseISO(s);const t=new Date(d.getFullYear(),d.getMonth()
 function dayLabel(s){const d=parseISO(s);return DAYNAMES[d.getDay()]+" (KW "+kw(s)+")";}
 function dateLabel(s){const d=parseISO(s);
   return String(d.getDate()).padStart(2,"0")+"."+String(d.getMonth()+1).padStart(2,"0")+"."+d.getFullYear();}
-function seasonOf(k){return SEASONS.find(s=>k>=s.start&&k<=s.end)||SEASONS[0];}
+function seasonOf(k){const L=SEASONS_();return L.find(s=>k>=s.start&&k<=s.end)||L[0];}
 
 /* ---------- State ---------- */
 const BLANK=()=>({abrechnung:0,cards:[],gutscheine:[],rechnungen:[],barIst:0});
@@ -294,7 +345,7 @@ const cntL=a=>(a||[]).filter(v=>+v>0).length;
 let days={};            // key -> record
 let cur=iso(new Date());
 let db=null, uid=null, dirty=new Set(), savingTimer=null;
-let notes={}, curSeason=seasonOf(cur).id;
+let notes={}, curSeason=null;
 
 function rec(k){return days[k]||BLANK();}
 function calc(r){
@@ -311,22 +362,26 @@ function hasData(r){return !!((+r.abrechnung)||(r.cards||[]).length||(r.gutschei
 const SB_URL="https://pjfsbayqdxfszlejcivq.supabase.co";
 const SB_KEY="sb_publishable_gOox3QM_BEounIvIbQJ7mQ_YF2hDzw4";
 const TABLE="abrechnung";
-const LS="abrechnung-v1";
+const APP_VERSION="2026-11-23 23:35";
+const LS="abrechnung-sync-v1";
 let sb=null;
 
-function saveLocal(){try{localStorage.setItem(LS,JSON.stringify({days,notes}))}catch(e){}}
-function loadLocal(){try{const j=JSON.parse(localStorage.getItem(LS)||"{}");
-  if(j.days){days=j.days;
-    Object.values(days).forEach(r=>{
-      if(!r.gutscheine){r.gutscheine=(+r.gutschein>0)?[+r.gutschein]:[];}
-      if(!r.rechnungen){r.rechnungen=[];if(+r.or1>0)r.rechnungen.push(+r.or1);if(+r.or2>0)r.rechnungen.push(+r.or2);}
-      delete r.gutschein;delete r.or1;delete r.or2;
-      if(r.barIst===undefined){r.barIst=(+r.trinkgeld)?calc(r).bar+(+r.trinkgeld):0;}
-      delete r.trinkgeld;
-    });}
-  if(j.notes)notes=j.notes;}catch(e){}}
+function saveLocal(){try{localStorage.setItem(LS,JSON.stringify({days,notes,cfg}))}catch(e){}}
+function loadLocal(){
+  try{
+    const j=JSON.parse(localStorage.getItem(LS)||"{}");
+    if(j.days)days=j.days;
+    if(j.notes)notes=j.notes;
+    if(j.cfg){cfg={...DEF_SET,...j.cfg};delete cfg.logo;}
+  }catch(e){}
+  Object.values(days).forEach(r=>{
+    if(!Array.isArray(r.cards))r.cards=[];
+    if(!r.gutscheine)r.gutscheine=[];
+    if(!r.rechnungen)r.rechnungen=[];
+    if(r.barIst===undefined)r.barIst=0;
+  });
+}
 function setSync(t){$("syncInfo").textContent=t;}
-
 function markDirty(k){dirty.add(k);saveLocal();scheduleSave();}
 function scheduleSave(){clearTimeout(savingTimer);savingTimer=setTimeout(flush,700);}
 
@@ -352,7 +407,6 @@ async function flush(){
     setSync(navigator.onLine?"Speichern fehlgeschlagen – lokal gesichert":"offline – lokal gesichert");
   }
 }
-
 function arr(v){if(typeof v==="string"){try{v=JSON.parse(v)}catch(e){v=[]}}
   return Array.isArray(v)?v.map(Number):[];}
 function rowToRec(r){
@@ -364,7 +418,6 @@ function rowToRec(r){
   if(!rec.barIst&&+r.trinkgeld)rec.barIst=calc(rec).bar+(+r.trinkgeld);
   return rec;
 }
-
 async function pullAll(){
   const{data,error}=await sb.from(TABLE).select("*");
   if(error)throw error;
@@ -372,26 +425,57 @@ async function pullAll(){
   (data||[]).forEach(r=>{days[String(r.day).slice(0,10)]=rowToRec(r);});
   saveLocal();renderAll();
   setSync(Object.keys(days).length+" Tage synchronisiert");
-  return (data||[]).length;
 }
-
 async function startSession(session){
   uid=session.user.id;
-  const l=$("login");if(l)l.remove();
+  const el=$("splash");
+  if(el){el.classList.add("go");setTimeout(()=>{el.style.display="none";},400);}
   document.body.classList.remove("locked");
+  $("acc-mail").textContent=session.user.email||"–";
   setSync("lade …");
-  try{
-    await pullAll();
-  }catch(e){setSync("offline – lokale Daten");}
+  try{await pullAll();}catch(e){setSync("offline – lokale Daten");}
   flush();
 }
-
 async function logout(){
-  try{await flush();await sb.auth.signOut();}catch(e){}
-  try{localStorage.removeItem(LS)}catch(e){}
-  location.reload();
+  try{await flush();}catch(e){}
+  try{await sb.auth.signOut({scope:"local"});}catch(e){}
+  try{
+    localStorage.removeItem(LS);
+    Object.keys(localStorage).filter(k=>/^sb-.*-auth-token/.test(k)&&SB_URL.indexOf(k.slice(3,k.indexOf("-auth-token")))>-1)
+      .forEach(k=>localStorage.removeItem(k));
+  }catch(e){}
+  days={};notes={};dirty.clear();uid=null;
+  showLogin();
 }
 function saveNotes(){saveLocal();}
+
+/* ---------- Export / Import ---------- */
+function exportData(){
+  const blob=new Blob([JSON.stringify({v:1,exported:new Date().toISOString(),cfg,days,notes},null,1)],
+    {type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="abrechnung-"+iso(new Date())+".json";
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);
+}
+function importData(file){
+  const fr=new FileReader();
+  fr.onload=()=>{
+    try{
+      const j=JSON.parse(fr.result);
+      if(!j||typeof j!=="object"||!j.days)throw 0;
+      let n=0;
+      Object.keys(j.days).forEach(k=>{if(/^\d{4}-\d{2}-\d{2}$/.test(k)){days[k]=j.days[k];n++;}});
+      if(j.notes)notes=j.notes;
+      if(j.cfg){cfg={...cfg,...j.cfg};delete cfg.logo;}
+      Object.keys(j.days).forEach(k=>{if(/^\d{4}-\d{2}-\d{2}$/.test(k))dirty.add(k);});
+      saveLocal();applyCfg();renderAll();renderSettings();flush();
+      alert(n+" Tage eingelesen.");
+    }catch(e){alert("Datei konnte nicht gelesen werden.");}
+  };
+  fr.readAsText(file);
+}
 
 /* ---------- Tag view ---------- */
 function renderTag(){
@@ -454,14 +538,14 @@ function bindField(id,key){
 function renderSaison(){
   const chips=$("seasonChips");
   chips.innerHTML="";
-  SEASONS.forEach(s=>{
+  SEASONS_().forEach(s=>{
     const b=document.createElement("span");
     b.className="chip"+(s.id===curSeason?" on":"");
     b.textContent="Saison "+s.id;
     b.onclick=()=>{curSeason=s.id;renderSaison();};
     chips.appendChild(b);
   });
-  const s=SEASONS.find(x=>x.id===curSeason);
+  const s=SEASONS_().find(x=>x.id===curSeason)||SEASONS_()[0];
   const keys=Object.keys(days).filter(k=>k>=s.start&&k<=s.end&&hasData(days[k])).sort();
   let A=0,K=0,B=0,G=0,O=0,T=0,n=0;
   const tb=$("sRows");tb.innerHTML="";
@@ -572,42 +656,103 @@ function calcNotes(){
 
 /* ---------- Navigation ---------- */
 function show(v){
-  ["tag","saison","bericht","scheine"].forEach(x=>{
+  ["tag","saison","bericht","scheine","mehr"].forEach(x=>{
     $("v-"+x).classList.toggle("hide",x!==v);
   });
-  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+  document.querySelectorAll("nav button[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
   if(v==="saison")renderSaison();
   if(v==="bericht")renderBericht();
   if(v==="scheine")renderNotes();
+  if(v==="mehr")renderSettings();
 }
 function renderAll(){renderTag();if(!$("v-saison").classList.contains("hide"))renderSaison();
   if(!$("v-bericht").classList.contains("hide"))renderBericht();
   if(!$("v-scheine").classList.contains("hide"))renderNotes();}
 
-/* ---------- Login ---------- */
+/* ---------- Einstellungen ---------- */
+function applyCfg(){
+  $("splashLogo").src="logo.png";
+  $("splashName").textContent=cfg.name||"";
+}
+function renderSettings(){
+  $("set-name").value=cfg.name||"";
+  $("set-slabel").value=cfg.slabel||"";
+  $("set-sstart").value=cfg.sstart||"";
+  $("set-send").value=cfg.send||"";
+  $("verline").textContent="Version "+APP_VERSION;
+  $("set-count").textContent=Object.keys(days).filter(k=>hasData(days[k])).length;
+  applyCfg();
+}
+function bindSettings(){
+  const upd=(id,key)=>{$(id).onchange=()=>{cfg[key]=$(id).value;saveLocal();applyCfg();
+    if(key!=="name")renderSaison();};};
+  upd("set-name","name");upd("set-slabel","slabel");
+  upd("set-sstart","sstart");upd("set-send","send");
+  $("pw-save").onclick=changePw;
+  $("navLock").onclick=()=>logout();
+  $("set-export").onclick=exportData;
+  $("set-import").onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)importData(f);e.target.value="";};
+  $("set-wipe").onclick=()=>{
+    if(!confirm("Wirklich alle erfassten Tage löschen? Das gilt auch für alle anderen Geräte."))return;
+    Object.keys(days).forEach(k=>dirty.add(k));
+    days={};notes={};saveLocal();renderAll();renderSettings();flush();
+  };
+}
+/* ---------- Anmeldung ---------- */
+function showLogin(){
+  const el=$("splash");
+  if(el){el.style.display="";el.offsetHeight;el.classList.remove("go");}
+  document.body.classList.add("locked");
+  $("lg-pass").value="";
+  $("lk-label").className="lklabel";
+  $("lk-label").textContent="Anmelden";
+  $("acc-mail").textContent="–";
+  setSync("");
+  show("tag");renderAll();
+  window.scrollTo(0,0);
+}
 async function initAuth(){
   document.body.classList.add("locked");
-  try{
-    sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
-  }catch(e){$("lg-err").textContent="Supabase konnte nicht geladen werden";return;}
-  const{data}=await sb.auth.getSession();
-  if(data&&data.session){startSession(data.session);return;}
+  try{sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});}
+  catch(e){$("lk-label").className="lklabel err";$("lk-label").textContent="Keine Verbindung";return;}
   $("loginForm").onsubmit=async ev=>{
     ev.preventDefault();
-    const b=$("lg-go");b.disabled=true;b.textContent="…";$("lg-err").textContent="";
+    const lab=$("lk-label"),b=$("lg-go");
+    lab.className="lklabel";b.disabled=true;b.textContent="…";
     const{data:d,error}=await sb.auth.signInWithPassword({
       email:$("lg-mail").value.trim(),password:$("lg-pass").value});
     b.disabled=false;b.textContent="Anmelden";
     if(error||!d.session){
-      const m=error?(error.message||""):"keine Sitzung";
-      $("lg-err").textContent=/invalid login/i.test(m)?"E-Mail oder Passwort falsch":("Fehler: "+m);
-      $("lg-pass").value="";return;}
+      lab.className="lklabel err";
+      lab.textContent=/invalid login/i.test(error&&error.message||"")?"E-Mail oder Passwort falsch":("Fehler: "+(error&&error.message||"keine Sitzung"));
+      $("lg-pass").value="";return;
+    }
     startSession(d.session);
   };
+  const{data}=await sb.auth.getSession();
+  if(data&&data.session)startSession(data.session);
+}
+
+async function changePw(){
+  const n=$("pw-new").value,n2=$("pw-new2").value,msg=$("pw-msg");
+  const bad=t=>{msg.className="pwmsg err";msg.textContent=t;};
+  if(n.length<8){bad("Mindestens 8 Zeichen");return;}
+  if(n!==n2){bad("Die beiden Eingaben sind nicht gleich");return;}
+  const{error}=await sb.auth.updateUser({password:n});
+  if(error){bad("Fehler: "+error.message);return;}
+  $("pw-new").value="";$("pw-new2").value="";
+  msg.className="pwmsg ok";msg.textContent="Passwort geändert";
+  setTimeout(()=>{msg.textContent="";msg.className="pwmsg";},5000);
 }
 
 /* ---------- Init ---------- */
+curSeason=SEASONS_()[0].id;
+bindSettings();
+applyCfg();
 initAuth();
+window.addEventListener("online",()=>{if(dirty.size)flush();});
+if("serviceWorker" in navigator){window.addEventListener("load",()=>{
+  navigator.serviceWorker.register("sw.js").catch(()=>{});});}
 loadLocal();
 bindField("f-abrechnung","abrechnung");
 bindField("f-barIst","barIst");
@@ -618,7 +763,7 @@ $("dPrev").onclick=()=>{cur=addDays(cur,-1);renderTag();};
 $("dNext").onclick=()=>{cur=addDays(cur,1);renderTag();};
 $("dToday").onclick=()=>{cur=iso(new Date());renderTag();};
 $("dPick").onchange=e=>{if(e.target.value){cur=e.target.value;renderTag();}};
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.v));
+document.querySelectorAll("nav button[data-v]").forEach(b=>b.onclick=()=>show(b.dataset.v));
 $("b-woche").onclick=()=>{const d=parseISO(iso(new Date()));const wd=(d.getDay()+6)%7;
   $("b-von").value=addDays(iso(d),-wd);$("b-bis").value=addDays(iso(d),6-wd);renderBericht();};
 $("b-monat").onclick=()=>{const d=new Date();
@@ -629,7 +774,6 @@ $("b-7").onclick=()=>{const t=iso(new Date());
 $("b-saison").onclick=()=>{const s=seasonOf(iso(new Date()));
   $("b-von").value=s.start;$("b-bis").value=s.end;renderBericht();};
 ["b-von","b-bis"].forEach(id=>$(id).onchange=renderBericht);
-$("logoutBtn").onclick=()=>logout();
 $("n-coins").oninput=()=>{notes.coins=num($("n-coins").value);calcNotes();saveNotes();};
 $("n-coins").onblur=()=>{const v=num($("n-coins").value);$("n-coins").value=v?nf.format(v):"";};
 $("n-take").onclick=()=>{
@@ -641,9 +785,8 @@ $("n-reset").onclick=()=>{notes={};renderNotes();saveNotes();};
  $("b-bis").value=iso(d);}
 renderTag();
 
-window.addEventListener("online",()=>{if(dirty.size)flush();});
 window.addEventListener("beforeunload",()=>{saveLocal();});
-document.addEventListener("visibilitychange",()=>{if(document.hidden)flush();});
+document.addEventListener("visibilitychange",()=>{if(document.hidden){saveLocal();flush();}});
 </script>
 </body>
 </html>
