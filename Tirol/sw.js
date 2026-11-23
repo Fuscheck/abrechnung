@@ -1,4 +1,4 @@
-const CACHE="abrechnung-tirol-v1";
+const CACHE="abrechnung-tirol-v3";
 const ASSETS=["./","./index.html","./manifest.webmanifest","./logo.png",
   "./icon-192.png","./icon-512.png","./apple-touch-icon.png"];
 self.addEventListener("install",e=>{
