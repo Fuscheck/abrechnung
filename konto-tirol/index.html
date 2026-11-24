@@ -414,6 +414,7 @@ const DENOMS=[200,100,50,20,10,5];
 
 /* ---------- Helpers ---------- */
 const $=id=>document.getElementById(id);
+const $$=id=>document.getElementById(id)||{style:{},classList:{add(){},remove(){},toggle(){}},addEventListener(){},set onclick(v){},set onchange(v){},set oninput(v){},set textContent(v){},get textContent(){return""},set innerHTML(v){},set value(v){},get value(){return""},querySelector(){return null},appendChild(){},closest(){return null}};
 const nf=new Intl.NumberFormat("de-AT",{minimumFractionDigits:2,maximumFractionDigits:2});
 const eur=v=>nf.format(v||0)+" €";
 const pct=v=>nf.format((v||0)*100)+" %";
@@ -455,7 +456,7 @@ function hasData(r){return !!((+r.abrechnung)||(r.cards||[]).length||(r.gutschei
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-24 01:45";
+const APP_VERSION="2026-11-24 01:55";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -757,8 +758,9 @@ function seenMap(){try{return JSON.parse(localStorage.getItem(seenKey())||"{}")}
 function markSeen(it){const m=seenMap();m[it.id]=it.updated_at;try{localStorage.setItem(seenKey(),JSON.stringify(m))}catch(e){}}
 function isNew(it){const m=seenMap();return m[it.id]!==it.updated_at;}
 function updateDot(){
-  const n=infos.filter(isNew).length;
-  $("infoDot").classList.toggle("hide",n===0);
+  const d=$("infoDot");
+  if(d)d.classList.toggle("hide",infos.filter(isNew).length===0);
+  if(!$("v-start").classList.contains("hide"))renderStart();
 }
 async function loadInfos(){
   if(!sb||!uid)return;
@@ -835,25 +837,7 @@ function renderDienstplan(){
   $("empty-checkliste").textContent=other.length?"":"";
 }
 function renderInfo(){
-  const box=$("infoList");box.innerHTML="";
-  
-  Object.keys(KINDS).forEach(k=>{
-    const list=infos.filter(i=>i.kind===k);
-    if(!list.length)return;
-    const h=document.createElement("h2");h.textContent=KINDS[k][0];
-    h.style.cssText="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:14px 0 4px";
-    box.appendChild(h);
-    list.forEach(it=>{
-      const d=document.createElement("div");d.className="infoitem";
-      const date=new Date(it.updated_at).toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"});
-      d.innerHTML="<div class='ic'>"+KINDS[k][1]+"</div><div class='tt2'><b></b><span>"+date+"</span></div>";
-      d.querySelector("b").textContent=it.title;
-      if(isNew(it)){const n=document.createElement("em");n.className="neu";n.textContent="NEU";d.querySelector("b").appendChild(n);}
-      d.onclick=()=>openInfo(it);
-      box.appendChild(d);
-    });
-  });
-  $("infoEmpty").textContent=infos.length?"":"Noch keine Einträge.";
+  renderList2("anleitung");renderList2("plan");
 }
 async function openInfo(it){
   const v=$("infoView");v.classList.remove("hide");v.innerHTML="";
@@ -997,7 +981,6 @@ function bindSettings(){
   $("if-cancel").onclick=()=>show("start");
   $("if-save").onclick=saveInfo;
   $("if-del").onclick=delInfo;
-  $("navLock").onclick=()=>logout();
   $("set-export").onclick=exportData;
   $("set-import").onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)importData(f);e.target.value="";};
   $("set-wipe").onclick=()=>{
