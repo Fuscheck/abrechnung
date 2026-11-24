@@ -95,16 +95,31 @@ tr.clk{cursor:pointer}
 tr.clk:active{background:var(--card2)}
 tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
 .hide{display:none}
-.startlogo{text-align:center;margin:10px 0 18px}
-.startlogo img{width:min(62vw,230px)}
+.startlogo{text-align:center;margin:6px 0 14px}
+.startlogo img{width:min(52vw,200px)}
+.hello{display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 12px}
+.hello b{font-size:17px;font-weight:650}
+.hello span{font-size:13px;color:var(--dim)}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.tile{position:relative;background:var(--card);border:1px solid var(--line);border-radius:16px;
-  padding:20px 12px 16px;text-align:center;cursor:pointer;color:var(--txt);font:inherit}
-.tile:active{background:var(--card2)}
-.tile i{display:block;font-size:30px;font-style:normal;margin-bottom:8px}
-.tile b{display:block;font-size:15px;font-weight:650;margin-bottom:3px}
-.tile span{display:block;font-size:12px;color:var(--dim)}
-.tile .dot{top:12px;right:12px}
+.tile{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--line);
+  border-radius:20px;padding:16px 14px 14px;text-align:left;cursor:pointer;color:var(--txt);font:inherit;
+  min-height:132px;display:flex;flex-direction:column;align-items:flex-start;
+  transition:transform .08s ease, background .12s ease}
+.tile:active{transform:scale(.975);background:var(--card2)}
+.tile .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;margin-bottom:auto}
+.tile .ic svg{width:22px;height:22px}
+.tile b{display:block;font-size:15.5px;font-weight:650;margin-top:12px}
+.tile .sb{display:block;font-size:12.5px;color:var(--dim);margin-top:2px;line-height:1.35}
+.tile .go{position:absolute;right:13px;bottom:11px;font-size:19px;color:var(--line)}
+.tile::after{content:"";position:absolute;inset:0;border-radius:20px;pointer-events:none;
+  background:radial-gradient(120% 90% at 100% 0%, var(--glow), transparent 58%)}
+.t-abr{--tint:#4493f8;--glow:rgba(68,147,248,.13)}
+.t-dp{--tint:#e9b949;--glow:rgba(233,185,73,.13)}
+.t-abl{--tint:#3fb950;--glow:rgba(63,185,80,.12)}
+.t-anl{--tint:#b07cf0;--glow:rgba(176,124,240,.12)}
+.tile .ic{background:color-mix(in srgb, var(--tint) 16%, transparent);color:var(--tint)}
+.badge{position:absolute;top:12px;right:12px;background:var(--bad);color:#fff;font-size:10px;
+  font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:999px;z-index:2}
 .dpslot{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
 .dpslot h3{margin:0 0 8px;font-size:14px}
 .dpslot img{width:100%;border-radius:10px}
@@ -152,11 +167,28 @@ nav button{position:relative}
   <!-- ============ TAG ============ -->
   <section id="v-start" class="hide">
     <div class="startlogo"><img src="logo.png" alt=""></div>
+    <div class="hello"><b id="helloTxt">Guten Tag</b><span id="helloDate"></span></div>
     <div class="tiles">
-      <button class="tile" data-go="tag"><i>📋</i><b>Abrechnung</b><span id="t-abr">–</span></button>
-      <button class="tile" data-go="anleitung"><i>📘</i><b>Anleitung</b><span id="t-anl">–</span></button>
-      <button class="tile" data-go="ablaeufe"><i>🗒</i><b>Abläufe</b><span id="t-abl">–</span></button>
-      <button class="tile" data-go="dienstplan"><i>📅</i><b>Dienstplan</b><span id="t-dp">–</span></button>
+      <button class="tile t-abr" data-go="tag">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span>
+        <b>Abrechnung</b><span class="sb" id="t-abr">–</span>
+        <span class="go">›</span>
+      </button>
+      <button class="tile t-dp" data-go="dienstplan">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+        <b>Dienstplan</b><span class="sb" id="t-dp">–</span>
+        <span class="go">›</span>
+      </button>
+      <button class="tile t-abl" data-go="ablaeufe">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5h14M5 12h14M5 19h9"/><circle cx="19.5" cy="19" r="1.6"/></svg></span>
+        <b>Abläufe</b><span class="sb" id="t-abl">–</span>
+        <span class="go">›</span>
+      </button>
+      <button class="tile t-anl" data-go="anleitung">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H18v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M8 7.5h6M8 11h6"/></svg></span>
+        <b>Anleitung</b><span class="sb" id="t-anl">–</span>
+        <span class="go">›</span>
+      </button>
     </div>
     <div class="row" style="margin-top:14px">
       <button class="btn" id="startMehr" style="flex:1">Einstellungen</button>
@@ -464,7 +496,7 @@ function hasData(r){return !!((+r.abrechnung)||(r.cards||[]).length||(r.gutschei
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-24 07:20";
+const APP_VERSION="2026-11-24 07:40";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -782,19 +814,45 @@ async function loadInfos(){
   }catch(e){}
 }
 function renderStart(){
-  const c=k=>infos.filter(i=>i.kind===k).length;
-  const nu=k=>infos.filter(i=>i.kind===k&&isNew(i)).length;
-  const lab=(k,el)=>{
-    const n=c(k),x=nu(k);
-    $(el).textContent=n?(n+(n===1?" Eintrag":" Einträge")+(x?" · "+x+" neu":"")):"leer";
-    const t=$(el).closest(".tile");
-    let d=t.querySelector(".dot");
-    if(x&&!d){d=document.createElement("em");d.className="dot";t.appendChild(d);}
-    if(!x&&d)d.remove();
+  const d=new Date();
+  const h=d.getHours();
+  $("helloTxt").textContent=h<11?"Guten Morgen":(h<18?"Guten Tag":"Guten Abend");
+  $("helloDate").textContent=d.toLocaleDateString("de-AT",{weekday:"long",day:"numeric",month:"long"});
+
+  const setTile=(id,text,newCount)=>{
+    const el=$(id);if(!el)return;
+    el.textContent=text;
+    const t=el.closest(".tile");if(!t)return;
+    let b=t.querySelector(".badge");
+    if(newCount>0){if(!b){b=document.createElement("span");b.className="badge";t.appendChild(b);}
+      b.textContent=newCount===1?"NEU":newCount+" NEU";}
+    else if(b)b.remove();
   };
-  lab("anleitung","t-anl");lab("plan","t-abl");lab("dienstplan","t-dp");
-  const keys=Object.keys(days).filter(k=>hasData(days[k]));
-  $("t-abr").textContent=keys.length?keys.length+" Tage erfasst":"noch leer";
+
+  // Abrechnung: heutiger Stand
+  const today=iso(new Date()), r=rec(today), c=calc(r);
+  const anz=Object.keys(days).filter(k=>hasData(days[k])).length;
+  setTile("t-abr", hasData(r)
+    ? "Heute "+eur(r.abrechnung)+" · TG "+eur(c.tg)
+    : (anz?"Heute noch nichts · "+anz+" Tage gesamt":"Noch nichts erfasst"), 0);
+
+  // Dienstplan: aktuelle Woche
+  const dp=infos.filter(i=>i.kind==="dienstplan");
+  const cur=dp.find(i=>i.title==="Diese Woche");
+  const nx=dp.find(i=>i.title==="Nächste Woche");
+  const nDp=dp.filter(isNew).length;
+  setTile("t-dp", dp.length
+    ? ("KW "+kw(today)+(cur?" · aktuell da":" · fehlt")+(nx?" · nächste da":""))
+    : "Noch kein Plan", nDp);
+
+  const abl=infos.filter(i=>i.kind==="plan");
+  setTile("t-abl", abl.length===1?abl[0].title:(abl.length?abl.length+" Einträge":"Noch leer"),
+    abl.filter(isNew).length);
+
+  const anl=infos.filter(i=>i.kind==="anleitung");
+  setTile("t-anl", anl.length===1?anl[0].title:(anl.length?anl.length+" Anleitungen":"Noch leer"),
+    anl.filter(isNew).length);
+
   document.querySelectorAll(".adminonly").forEach(b=>b.classList.toggle("hide",!isAdmin));
 }
 function renderList2(kind){
