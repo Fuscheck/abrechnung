@@ -95,6 +95,20 @@ tr.clk{cursor:pointer}
 tr.clk:active{background:var(--card2)}
 tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
 .hide{display:none}
+#cal{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:10px}
+.calhead{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.calhead b{flex:1;text-align:center;font-size:15px}
+.calhead .btn{flex:0 0 44px;padding:8px 0;font-size:17px}
+.caldow,.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.caldow span{text-align:center;font-size:11px;color:var(--dim);padding:2px 0}
+.cald{aspect-ratio:1;display:flex;align-items:center;justify-content:center;position:relative;
+  border-radius:9px;font-size:14px;cursor:pointer;background:transparent;border:none;color:var(--txt);font:inherit}
+.cald.off{color:var(--line);pointer-events:none}
+.cald.has::after{content:"";position:absolute;bottom:5px;width:4px;height:4px;border-radius:50%;background:var(--acc)}
+.cald.inr{background:rgba(68,147,248,.16);border-radius:0}
+.cald.end{background:var(--acc);color:#fff;font-weight:650;border-radius:9px}
+.cald.end.has::after{background:#fff}
+.cald.today{outline:1px solid var(--line)}
 .locked-day input,.locked-day textarea,.locked-day select{opacity:.55}
 .lockmark{font-size:13px;color:var(--warn);margin-left:6px}
 tr.lk td:first-child::after{content:" 🔒";font-size:10px}
@@ -210,9 +224,24 @@ tr.lk td:first-child::after{content:" 🔒";font-size:10px}
   <section id="v-bericht" class="hide">
     <h1>Bericht</h1>
     <div class="card">
-      <div class="grid2">
-        <div class="fld"><label>Von</label><input type="date" id="b-von"></div>
-        <div class="fld"><label>Bis</label><input type="date" id="b-bis"></div>
+      <div class="fld">
+        <button class="btn acc" id="b-open" style="width:100%">Zeitraum im Kalender wählen</button>
+        <div class="note" id="b-range" style="text-align:center"></div>
+      </div>
+      <input type="hidden" id="b-von"><input type="hidden" id="b-bis">
+      <div id="cal" class="hide">
+        <div class="calhead">
+          <button class="btn" id="calPrev">‹</button>
+          <b id="calTitle"></b>
+          <button class="btn" id="calNext">›</button>
+        </div>
+        <div class="caldow" id="calDow"></div>
+        <div class="calgrid" id="calGrid"></div>
+        <div class="note" id="calInfo" style="text-align:center"></div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" id="calCancel" style="flex:1">Abbrechen</button>
+          <button class="btn acc" id="calOk" style="flex:1.4">OK</button>
+        </div>
       </div>
       <div class="row" style="margin-bottom:8px">
         <button class="btn" id="b-woche" style="flex:1">Diese Woche</button>
@@ -321,7 +350,6 @@ tr.lk td:first-child::after{content:" 🔒";font-size:10px}
 
 <nav>
   <button data-v="tag" class="on"><i>📋</i>Tag</button>
-  <button data-v="scheine"><i>💶</i>Scheine</button>
   <button data-v="bericht"><i>🧾</i>Bericht</button>
   <button data-v="saison"><i>📊</i>Saison</button>
   <button data-v="mehr"><i>⚙️</i>Mehr</button>
@@ -386,7 +414,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://pjfsbayqdxfszlejcivq.supabase.co";
 const SB_KEY="sb_publishable_gOox3QM_BEounIvIbQJ7mQ_YF2hDzw4";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-24 18:30";
+const APP_VERSION="2026-11-24 21:20";
 const LS="abrechnung-sync-v1";
 let sb=null;
 
@@ -621,6 +649,50 @@ function renderSaison(){
 }
 
 /* ---------- Bericht ---------- */
+let calM=null,calA=null,calB=null;
+function firstOfMonth(k){return k.slice(0,8)+"01";}
+function openCal(){
+  calA=$("b-von").value||null;calB=$("b-bis").value||null;
+  calM=firstOfMonth(calA||iso(new Date()));
+  $("cal").classList.remove("hide");drawCal();
+}
+function closeCal(){$("cal").classList.add("hide");}
+function shiftMonth(n){
+  const d=parseISO(calM);d.setMonth(d.getMonth()+n);calM=firstOfMonth(iso(d));drawCal();
+}
+function rangeLabel(){
+  const v=$("b-von").value,b=$("b-bis").value;
+  $("b-range").textContent=(v&&b)?(dateLabel(v)+" – "+dateLabel(b)):"Noch kein Zeitraum gewählt";
+}
+function drawCal(){
+  const dow=$("calDow");
+  if(!dow.dataset.b){dow.innerHTML="";["Mo","Di","Mi","Do","Fr","Sa","So"].forEach(t=>{
+    const e=document.createElement("span");e.textContent=t;dow.appendChild(e);});dow.dataset.b="1";}
+  const d0=parseISO(calM);
+  $("calTitle").textContent=d0.toLocaleDateString("de-AT",{month:"long",year:"numeric"});
+  const grid=$("calGrid");grid.innerHTML="";
+  const lead=(d0.getDay()+6)%7;
+  const dim=new Date(d0.getFullYear(),d0.getMonth()+1,0).getDate();
+  const today=iso(new Date());
+  for(let i=0;i<lead;i++){const e=document.createElement("button");e.className="cald off";e.textContent="";grid.appendChild(e);}
+  for(let n=1;n<=dim;n++){
+    const k=calM.slice(0,8)+String(n).padStart(2,"0");
+    const b=document.createElement("button");b.type="button";b.className="cald";b.textContent=n;
+    if(days[k]&&hasData(days[k]))b.classList.add("has");
+    if(k===today)b.classList.add("today");
+    if(calA&&calB&&k>calA&&k<calB)b.classList.add("inr");
+    if(k===calA||k===calB)b.classList.add("end");
+    b.onclick=()=>{
+      if(!calA||(calA&&calB)){calA=k;calB=null;}
+      else if(k<calA){calB=calA;calA=k;}
+      else calB=k;
+      drawCal();
+    };
+    grid.appendChild(b);
+  }
+  $("calInfo").textContent=!calA?"Erster Tippen: von":(!calB?"Zweites Tippen: bis":
+    dateLabel(calA)+" – "+dateLabel(calB));
+}
 function renderBericht(){
   const von=$("b-von").value,bis=$("b-bis").value;
   if(!von||!bis)return;
@@ -838,15 +910,23 @@ $("dToday").onclick=()=>{cur=iso(new Date());renderTag();};
 $("dPick").onchange=e=>{if(e.target.value){cur=e.target.value;renderTag();}};
 document.querySelectorAll("nav button[data-v]").forEach(b=>b.onclick=()=>show(b.dataset.v));
 $("b-woche").onclick=()=>{const d=parseISO(iso(new Date()));const wd=(d.getDay()+6)%7;
-  $("b-von").value=addDays(iso(d),-wd);$("b-bis").value=addDays(iso(d),6-wd);renderBericht();};
+  $("b-von").value=addDays(iso(d),-wd);$("b-bis").value=addDays(iso(d),6-wd);rangeLabel();renderBericht();};
 $("b-monat").onclick=()=>{const d=new Date();
   $("b-von").value=iso(new Date(d.getFullYear(),d.getMonth(),1));
-  $("b-bis").value=iso(new Date(d.getFullYear(),d.getMonth()+1,0));renderBericht();};
+  $("b-bis").value=iso(new Date(d.getFullYear(),d.getMonth()+1,0));rangeLabel();renderBericht();};
 $("b-7").onclick=()=>{const t=iso(new Date());
-  $("b-von").value=addDays(t,-6);$("b-bis").value=t;renderBericht();};
+  $("b-von").value=addDays(t,-6);$("b-bis").value=t;rangeLabel();renderBericht();};
 $("b-saison").onclick=()=>{const s=seasonOf(iso(new Date()));
-  $("b-von").value=s.start;$("b-bis").value=s.end;renderBericht();};
-["b-von","b-bis"].forEach(id=>$(id).onchange=renderBericht);
+  $("b-von").value=s.start;$("b-bis").value=s.end;rangeLabel();renderBericht();};
+$("b-open").onclick=openCal;
+$("calPrev").onclick=()=>shiftMonth(-1);
+$("calNext").onclick=()=>shiftMonth(1);
+$("calCancel").onclick=closeCal;
+$("calOk").onclick=()=>{
+  if(!calA){closeCal();return;}
+  $("b-von").value=calA;$("b-bis").value=calB||calA;
+  closeCal();rangeLabel();renderBericht();
+};
 $("n-coins").oninput=()=>{notes.coins=num($("n-coins").value);calcNotes();saveNotes();};
 $("n-coins").onblur=()=>{const v=num($("n-coins").value);$("n-coins").value=v?nf.format(v):"";};
 $("n-take").onclick=()=>{
@@ -856,7 +936,7 @@ $("n-take").onclick=()=>{
 };
 $("n-reset").onclick=()=>{notes={};renderNotes();saveNotes();};
 {const d=new Date();$("b-von").value=iso(new Date(d.getFullYear(),d.getMonth(),1));
- $("b-bis").value=iso(d);}
+ $("b-bis").value=iso(d);rangeLabel();}
 renderTag();
 
 window.addEventListener("beforeunload",()=>{saveLocal();});
