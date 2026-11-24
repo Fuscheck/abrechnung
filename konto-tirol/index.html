@@ -96,6 +96,28 @@ tr.clk{cursor:pointer}
 tr.clk:active{background:var(--card2)}
 tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
 .hide{display:none}
+nav button{position:relative}
+.dot{position:absolute;top:7px;right:calc(50% - 18px);width:8px;height:8px;border-radius:50%;background:var(--bad);display:block}
+.infoitem{display:flex;gap:10px;align-items:flex-start;padding:11px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.infoitem:last-child{border-bottom:none}
+.infoitem .ic{flex:0 0 22px;font-size:17px;line-height:1.2}
+.infoitem .tt2{flex:1;min-width:0}
+.infoitem b{display:block;font-size:15px;font-weight:600}
+.infoitem span{font-size:12px;color:var(--dim)}
+.neu{display:inline-block;background:var(--bad);color:#fff;font-size:10px;font-weight:700;
+  padding:1px 6px;border-radius:999px;margin-left:6px;vertical-align:1px}
+#infoView{position:fixed;inset:0;z-index:40;background:var(--bg);overflow:auto;
+  padding:calc(env(safe-area-inset-top) + 12px) 12px calc(80px + env(safe-area-inset-bottom))}
+#infoView h2{font-size:19px;margin:6px 0 4px}
+#infoView .meta{font-size:12px;color:var(--dim);margin-bottom:14px}
+#infoView p{font-size:15px;line-height:1.5;margin:0 0 10px}
+#infoView img{width:100%;border-radius:10px}
+#infoView iframe{width:100%;height:78vh;border:1px solid var(--line);border-radius:10px;background:#fff}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.chk b{flex:0 0 22px;font-size:17px;line-height:1.2;color:var(--dim)}
+.chk.on b{color:var(--ok)}
+.chk.on span{text-decoration:line-through;color:var(--dim)}
+.chk span{font-size:15px}
 .sync{font-size:11px;color:var(--dim);text-align:center;padding:6px 0 0}
 .chip{display:inline-block;background:var(--card2);border:1px solid var(--line);border-radius:999px;
   padding:5px 11px;font-size:13px;margin:0 6px 6px 0;cursor:pointer}
@@ -247,6 +269,36 @@ tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
     </div>
   </section>
 
+  <section id="v-info" class="hide">
+    <h1>Info</h1>
+    <div class="card" id="infoCard">
+      <div id="infoList"></div>
+      <div class="note" id="infoEmpty"></div>
+    </div>
+    <button class="btn acc hide" id="infoNew" style="width:100%;margin-bottom:10px">+ Neuer Eintrag</button>
+    <div class="card hide" id="infoForm">
+      <h2 id="infoFormTitle">Neuer Eintrag</h2>
+      <div class="fld"><label>Art</label>
+        <select id="if-kind">
+          <option value="anleitung">Anleitung</option>
+          <option value="plan">Arbeitsplan</option>
+          <option value="checkliste">Checkliste</option>
+          <option value="dienstplan">Dienstplan</option>
+        </select></div>
+      <div class="fld"><label>Titel</label><input type="text" id="if-title"></div>
+      <div class="fld"><label>Text (eine Zeile mit „- " wird zur Checkbox)</label>
+        <textarea id="if-body" rows="6" style="width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:11px;color:var(--txt);font:inherit"></textarea></div>
+      <div class="fld"><label>Bild oder PDF (optional)</label><input type="file" id="if-file" accept="image/*,application/pdf"></div>
+      <div class="note" id="if-current"></div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="if-cancel" style="flex:1">Abbrechen</button>
+        <button class="btn acc" id="if-save" style="flex:1.4">Speichern</button>
+      </div>
+      <button class="btn ghost hide" id="if-del" style="width:100%;margin-top:8px;color:var(--bad)">Eintrag löschen</button>
+      <div class="pwmsg" id="if-msg"></div>
+    </div>
+  </section>
+
   <section id="v-mehr" class="hide">
     <h1>Einstellungen</h1>
     <div class="card">
@@ -299,11 +351,14 @@ tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
   <div class="ini">by LA.</div>
 </div>
 
+<div id="infoView" class="hide"></div>
+
 <nav>
   <button data-v="tag" class="on"><i>📋</i>Tag</button>
   <button data-v="saison"><i>📊</i>Saison</button>
   <button data-v="bericht"><i>🧾</i>Bericht</button>
   <button data-v="scheine"><i>💶</i>Scheine</button>
+  <button data-v="info"><i>📘</i>Info<em class="dot hide" id="infoDot"></em></button>
   <button data-v="mehr"><i>⚙️</i>Mehr</button>
   <button id="navLock"><i>🔒</i>Abmelden</button>
 </nav>
@@ -362,7 +417,7 @@ function hasData(r){return !!((+r.abrechnung)||(r.cards||[]).length||(r.gutschei
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-23 23:35";
+const APP_VERSION="2026-11-24 01:10";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -434,6 +489,7 @@ async function startSession(session){
   $("acc-mail").textContent=session.user.email||"–";
   setSync("lade …");
   try{await pullAll();}catch(e){setSync("offline – lokale Daten");}
+  loadInfos();
   flush();
 }
 async function logout(){
@@ -654,9 +710,145 @@ function calcNotes(){
   el.className="big "+(diff<-0.005?"neg":diff>0.005?"pos":"");
 }
 
+/* ---------- Info ---------- */
+const KINDS={anleitung:["Anleitung","📘"],plan:["Arbeitsplan","🗒"],checkliste:["Checkliste","✅"],dienstplan:["Dienstplan","📅"]};
+let infos=[], isAdmin=false, editId=null;
+const seenKey=()=>LS+":seen";
+function seenMap(){try{return JSON.parse(localStorage.getItem(seenKey())||"{}")}catch(e){return{}}}
+function markSeen(it){const m=seenMap();m[it.id]=it.updated_at;try{localStorage.setItem(seenKey(),JSON.stringify(m))}catch(e){}}
+function isNew(it){const m=seenMap();return m[it.id]!==it.updated_at;}
+function updateDot(){
+  const n=infos.filter(isNew).length;
+  $("infoDot").classList.toggle("hide",n===0);
+}
+async function loadInfos(){
+  if(!sb||!uid)return;
+  try{
+    const{data,error}=await sb.from("infos").select("*").order("kind").order("sort").order("title");
+    if(error)throw error;
+    infos=data||[];
+    const{data:ad}=await sb.from("admins").select("user_id").eq("user_id",uid).maybeSingle();
+    isAdmin=!!ad;
+    renderInfo();updateDot();
+  }catch(e){}
+}
+function renderInfo(){
+  const box=$("infoList");box.innerHTML="";
+  $("infoNew").classList.toggle("hide",!isAdmin);
+  Object.keys(KINDS).forEach(k=>{
+    const list=infos.filter(i=>i.kind===k);
+    if(!list.length)return;
+    const h=document.createElement("h2");h.textContent=KINDS[k][0];
+    h.style.cssText="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:14px 0 4px";
+    box.appendChild(h);
+    list.forEach(it=>{
+      const d=document.createElement("div");d.className="infoitem";
+      const date=new Date(it.updated_at).toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"});
+      d.innerHTML="<div class='ic'>"+KINDS[k][1]+"</div><div class='tt2'><b></b><span>"+date+"</span></div>";
+      d.querySelector("b").textContent=it.title;
+      if(isNew(it)){const n=document.createElement("em");n.className="neu";n.textContent="NEU";d.querySelector("b").appendChild(n);}
+      d.onclick=()=>openInfo(it);
+      box.appendChild(d);
+    });
+  });
+  $("infoEmpty").textContent=infos.length?"":"Noch keine Einträge.";
+}
+async function openInfo(it){
+  const v=$("infoView");v.classList.remove("hide");v.innerHTML="";
+  const back=document.createElement("button");back.className="btn";back.textContent="‹ Zurück";
+  back.onclick=()=>{v.classList.add("hide");v.innerHTML="";markSeen(it);renderInfo();updateDot();};
+  const h=document.createElement("h2");h.textContent=it.title;
+  const m=document.createElement("div");m.className="meta";
+  m.textContent=(KINDS[it.kind]||["",""])[0]+" · geändert "+new Date(it.updated_at).toLocaleString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+  v.append(back,h,m);
+  (it.body||"").split("\n").forEach((line,i)=>{
+    const t=line.trim();
+    if(!t)return;
+    if(t.startsWith("- ")){
+      const key=LS+":chk:"+it.id+":"+i;
+      const row=document.createElement("div");row.className="chk";
+      let on=false;try{on=localStorage.getItem(key)==="1"}catch(e){}
+      row.innerHTML="<b></b><span></span>";
+      row.querySelector("span").textContent=t.slice(2);
+      const draw=()=>{row.classList.toggle("on",on);row.querySelector("b").textContent=on?"☑":"☐";};
+      row.onclick=()=>{on=!on;try{localStorage.setItem(key,on?"1":"0")}catch(e){}draw();};
+      draw();v.appendChild(row);
+    }else{
+      const p=document.createElement("p");p.textContent=t;v.appendChild(p);
+    }
+  });
+  if(it.file_path){
+    if(it.file_type==="page"){
+      const f=document.createElement("iframe");f.src=it.file_path;f.loading="lazy";v.appendChild(f);
+      const a=document.createElement("a");a.href=it.file_path;a.target="_blank";a.rel="noopener";
+      a.className="btn";a.style.cssText="display:block;text-align:center;margin-top:10px;text-decoration:none";
+      a.textContent="Ganze Seite öffnen";v.appendChild(a);
+    }else{
+      try{
+        const{data}=await sb.storage.from("infos").createSignedUrl(it.file_path,3600);
+        const url=data&&data.signedUrl;
+        if(url&&it.file_type==="image"){const img=document.createElement("img");img.src=url;v.appendChild(img);}
+        else if(url){const a=document.createElement("a");a.href=url;a.target="_blank";a.rel="noopener";
+          a.className="btn acc";a.style.cssText="display:block;text-align:center;margin-top:10px;text-decoration:none";
+          a.textContent="PDF öffnen";v.appendChild(a);}
+      }catch(e){}
+    }
+  }
+  if(isAdmin){
+    const e=document.createElement("button");e.className="btn";e.style.cssText="width:100%;margin-top:14px";
+    e.textContent="Bearbeiten";
+    e.onclick=()=>{v.classList.add("hide");v.innerHTML="";openForm(it);};
+    v.appendChild(e);
+  }
+  markSeen(it);updateDot();
+  window.scrollTo(0,0);
+}
+function openForm(it){
+  editId=it?it.id:null;
+  $("infoForm").classList.remove("hide");
+  $("infoFormTitle").textContent=it?"Eintrag bearbeiten":"Neuer Eintrag";
+  $("if-kind").value=it?it.kind:"anleitung";
+  $("if-title").value=it?it.title:"";
+  $("if-body").value=it?(it.body||""):"";
+  $("if-current").textContent=it&&it.file_path?("Datei: "+it.file_path):"";
+  $("if-del").classList.toggle("hide",!it);
+  $("if-msg").textContent="";
+  $("infoForm").scrollIntoView({block:"start"});
+}
+async function saveInfo(){
+  const msg=$("if-msg");
+  const title=$("if-title").value.trim();
+  if(!title){msg.className="pwmsg err";msg.textContent="Titel fehlt";return;}
+  const row={kind:$("if-kind").value,title,body:$("if-body").value,updated_at:new Date().toISOString()};
+  const f=$("if-file").files&&$("if-file").files[0];
+  try{
+    if(f){
+      const ext=(f.name.split(".").pop()||"bin").toLowerCase();
+      const path=Date.now()+"-"+Math.random().toString(16).slice(2)+"."+ext;
+      const{error:ue}=await sb.storage.from("infos").upload(path,f,{upsert:true});
+      if(ue)throw ue;
+      row.file_path=path;
+      row.file_type=f.type==="application/pdf"?"pdf":"image";
+    }
+    if(editId){const{error}=await sb.from("infos").update(row).eq("id",editId);if(error)throw error;}
+    else{const{error}=await sb.from("infos").insert(row);if(error)throw error;}
+    $("if-file").value="";$("infoForm").classList.add("hide");
+    await loadInfos();
+  }catch(e){msg.className="pwmsg err";msg.textContent="Fehler: "+(e.message||e);}
+}
+async function delInfo(){
+  if(!editId)return;
+  if(!confirm("Eintrag wirklich löschen?"))return;
+  try{
+    const{error}=await sb.from("infos").delete().eq("id",editId);
+    if(error)throw error;
+    $("infoForm").classList.add("hide");await loadInfos();
+  }catch(e){$("if-msg").className="pwmsg err";$("if-msg").textContent="Fehler: "+(e.message||e);}
+}
+
 /* ---------- Navigation ---------- */
 function show(v){
-  ["tag","saison","bericht","scheine","mehr"].forEach(x=>{
+  ["tag","saison","bericht","scheine","info","mehr"].forEach(x=>{
     $("v-"+x).classList.toggle("hide",x!==v);
   });
   document.querySelectorAll("nav button[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
@@ -664,6 +856,7 @@ function show(v){
   if(v==="bericht")renderBericht();
   if(v==="scheine")renderNotes();
   if(v==="mehr")renderSettings();
+  if(v==="info")renderInfo();
 }
 function renderAll(){renderTag();if(!$("v-saison").classList.contains("hide"))renderSaison();
   if(!$("v-bericht").classList.contains("hide"))renderBericht();
@@ -689,6 +882,10 @@ function bindSettings(){
   upd("set-name","name");upd("set-slabel","slabel");
   upd("set-sstart","sstart");upd("set-send","send");
   $("pw-save").onclick=changePw;
+  $("infoNew").onclick=()=>openForm(null);
+  $("if-cancel").onclick=()=>{$("infoForm").classList.add("hide");};
+  $("if-save").onclick=saveInfo;
+  $("if-del").onclick=delInfo;
   $("navLock").onclick=()=>logout();
   $("set-export").onclick=exportData;
   $("set-import").onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)importData(f);e.target.value="";};

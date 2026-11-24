@@ -1,0 +1,317 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Stationen Hotel Tirol</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Inter:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#f6f4ef; --surface:#fffdf8; --line:#e2ddd2; --fg:#1f2420; --muted:#6b7269;
+  --accent:#8a6a2f; --accent-soft:#f0e7d5;
+  --prep:#2f6d4f; --serv:#2c5d86; --abs:#9a5b1e; --next:#6a4a86;
+  --prep-bg:#e4efe8; --serv-bg:#e2ebf3; --abs-bg:#f5e8da; --next-bg:#ece6f3;
+  --display:"Bricolage Grotesque",Georgia,serif;
+  --body:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#14171a; --surface:#1c2024; --line:#2e343a; --fg:#e8e6e1; --muted:#9aa29c;
+  --accent:#d6ad63; --accent-soft:#2a2418;
+  --prep:#7ec9a1; --serv:#86b9e2; --abs:#e0a86a; --next:#b79fd6;
+  --prep-bg:#1b2a22; --serv-bg:#18242e; --abs-bg:#2b2117; --next-bg:#241d2e;
+  color-scheme:dark}}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.5;margin:0}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
+header.top{border-bottom:1px solid var(--line)}
+header.top .wrap{padding-block:20px 14px}
+.eyebrow{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 6px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(1.4rem,5vw,2.1rem);line-height:1.1;margin:0}
+.sub{color:var(--muted);margin:10px 0 0;max-width:62ch;font-size:.9rem}
+.rail{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
+.rail .wrap{padding-block:10px}
+.rowf{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.rowf+.rowf{margin-top:8px}
+.flabel{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);min-width:68px;flex:0 0 auto}
+button.chip{font:inherit;font-size:.82rem;padding:6px 12px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface);color:var(--fg);cursor:pointer}
+button.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+main .wrap{padding-block:20px 48px}
+.sheethead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--fg);padding-bottom:7px;margin-bottom:18px}
+.sheethead h2{font-family:var(--display);font-size:1.25rem;margin:0;font-weight:700}
+.gmeta{font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.num{flex:0 0 26px;font-family:var(--display);font-size:.82rem;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;padding-top:1px}
+.phase{margin-bottom:20px}
+.ph{display:inline-flex;align-items:center;gap:7px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;padding:3px 9px;border-radius:5px;margin-bottom:8px}
+.ph.p0{color:var(--prep);background:var(--prep-bg)}
+.ph.p1{color:var(--serv);background:var(--serv-bg)}
+.ph.p2{color:var(--next);background:var(--next-bg)}
+.ph.p3{color:var(--abs);background:var(--abs-bg)}
+.ph.p4{color:var(--next);background:var(--next-bg)}
+ol.tasks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+ol.tasks li{background:var(--surface);padding:11px 14px;min-width:0}
+.tt{display:flex;gap:10px;align-items:flex-start}
+.tx{min-width:0;flex:1}
+.tx p{margin:0;font-size:.93rem}
+.why{margin-top:5px!important;font-size:.82rem;color:var(--muted)}
+ul.subs{margin:7px 0 0;padding-left:17px;display:flex;flex-direction:column;gap:3px}
+ul.subs li{background:none;padding:0;font-size:.89rem}
+ul.subs li::marker{color:var(--accent)}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.tag{font-size:.68rem;letter-spacing:.05em;padding:2px 7px;border-radius:4px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.tag.time{border-color:var(--accent);color:var(--accent);font-variant-numeric:tabular-nums}
+.tag.pos{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:500}
+.tag.resp{border-style:dashed}
+.empty{color:var(--muted);font-size:.9rem;padding:28px 0;text-align:center}
+footer{border-top:1px solid var(--line)}
+footer .wrap{padding-block:14px 26px;color:var(--muted);font-size:.78rem}
+@media(max-width:520px){.flabel{min-width:100%}}
+</style></head><body>
+<script>
+const ROWS = [
+["Frühdienst","Alle","Alle","Vorbereitung","Aufsperren, Licht und Musik an, Kerze im Buffet anzünden","Die Frühstücksdame macht die Musik und die Lichter an und zündet die Kerze im Buffet an. Der Oberkellner sperrt die Tür auf.","",""],
+["Frühdienst","Alle","Alle","Vorbereitung","Tagesmenüangebote durchlesen und bei Unklarheiten nachfragen","","",""],
+["Frühdienst","Alle","Alle","Vorbereitung","Station kontrollieren","","","",
+ ["Sind alle Tische mit Allergien im Bonbuch eingetragen?","Sind die Anreisen eingetragen?","Steht auf der Station ein Anlass an – Geburtstag, Jubiläum?"]],
+["Frühdienst","Alle","Alle","Service","Ablauf beim Frühstücksservice","Jeder ist selbst für seine Station verantwortlich.","","",
+ ["Warme Getränke anbieten und servieren","Immer hilfsbereit beim Gast","Wenn Gäste aufstehen: Tisch so schnell wie möglich abräumen","Zucker auffüllen, Zuckermenage sauber machen und verräumen","Frühstücksgläser ausspülen und in den Spülkorb, bei vollem Korb gleich spülen","Bei Zeit Gläser ins Frühstücksbuffet bringen","Brotkörbchen leeren, in der Küche ausleeren, feucht abwischen, frische Serviette einlegen, zurück ins Buffet"]],
+["Frühdienst","Alle","Alle","Service","Aufleger nach und nach wechseln; untere Tischdecke nur Mi und Sa","Untere Tischdecke = untere Lage, nur Mi und Sa. Aufleger = obere Decke, nach jedem Service. Bitte nicht alle auf einmal runternehmen.","",""],
+["Frühdienst","Alle","Alle","Service","Fürs Abendessen eindecken","","","",
+ ["Mit der Vorlagekarte eindecken","Besteck gerade ausrichten","Wenn jemand gegenüber sitzt: perfekt in einer Linie","Salz und Pfeffer in eine Richtung","Alle Menagen und alle Karten überall möglichst gleich ausrichten"]],
+["Frühdienst","I","Alle","Service","Saugen: alle Stuben inklusive Eingang und Personalbereich","Station I saugt, Station II verteilt die Gläser, Station III deckt die Servietten ein.","täglich",""],
+["Frühdienst","II","Alle","Service","Gläser verteilen (Wasserglas immer, plus Rot- oder Weißweinglas laut Weinliste)","Station I saugt, Station II verteilt die Gläser, Station III deckt die Servietten ein.","",""],
+["Frühdienst","III","Alle","Service","Servietten eindecken","Station I saugt, Station II verteilt die Gläser, Station III deckt die Servietten ein.","",""],
+["Frühdienst","Alle","Alle","Service","Bänke abwischen, Kissen herrichten, Stühle in einer Linie an die Tischbeine stellen","","",""],
+["Frühdienst","III","Alle","Service","Boden wischen","","3x pro Woche",""],
+["Frühdienst","Alle","Alle","Service","Wenn eine Station früher fertig ist, den anderen Kollegen helfen","","",""],
+["Frühdienst","Alle","Alle","Service","Wenn alle fertig sind: Speisesaal gründlich abstauben, danach Servietten falten","","",""],
+["Frühdienst","Alle","Chef de Rang","Besonderheit","Sonderdienst bis 12:00: Teller für die Suppen einblättern und im vorderen Bereich bleiben, falls Gäste kommen","Der Chef de Rang hat den Schlüssel und bleibt an der Bar.","11:30–12:00",""],
+["Frühdienst","II","Alle","Besonderheit","Terrassen-Mise-en-place vorbereiten","Ab März, wenn die Terrasse aufmacht.","ab März",""],
+["Frühdienst","Restaurant","Alle","Vorbereitung","Lichter auf Tagesbetrieb 1 schalten","Macht normalerweise die Frühstücksdame. Wenn es nicht passt, selbst umschalten.","",""],
+["Frühdienst","Restaurant","Alle","Vorbereitung","In der TV-Lounge und in der Zirbenstube die Stühle herunternehmen und gerade richten","Gleich beim Ankommen in der Früh.","",""],
+["Frühdienst","Restaurant","Alle","Vorbereitung","Kerzen wechseln – Restaurant, Panorama Lounge, TV-Lounge und Zirbenstube","Vier Räume, nicht nur das Restaurant – wird am häufigsten vergessen.","",""],
+["Frühdienst","Restaurant","Alle","Vorbereitung","Cafe-Station an der Bar auffüllen","","","",
+ ["Kaffee","Tee","Milch","Zucker","Kekse"]],
+["Frühdienst","Restaurant","Alle","Vorbereitung","Cocktail-Station auffüllen","","","",
+ ["Sahne","Eiswürfel","Crasheis","Obst für die Cocktails"]],
+["Frühdienst","Restaurant","Alle","Vorbereitung","Aus der Küche holen und an der Bar verräumen","Gläser aus dem Backoffice an die Bar bringen.","","",
+ ["Tassen","Untertassen","Kännchen (Milchschaumbehälter und Teekannen)","Bleche (silberne Tabletts für den Kaffee)","Löffel für Espresso, Kaffee und Latte","Die drei Behälter, in denen unbeschädigter Zucker, Milch und verpackte Kekse gesammelt werden"]],
+["Frühdienst","Restaurant","Alle","Vorbereitung","Auffüllen: Messer, Gabel, Löffel, Dessertbesteck, Servietten","","",""],
+["Frühdienst","Restaurant","Alle","Vorbereitung","Ketchup und Mayonnaise auffüllen","","",""],
+["Frühdienst","Restaurant","Alle","Vorbereitung","Zündhölzer bei Zigarettenautomaten auffüllen","","",""],
+["Frühdienst","Restaurant","Alle","Vorbereitung","Salz und Pfeffer auffüllen und abwischen (überall)","","12:00–12:30",""],
+["Frühdienst","Restaurant","Alle","Service","Frühstücksgäste bedienen","","",""],
+["Frühdienst","Restaurant","Alle","Service","Gäste betreuen","Im Restaurant wird für Hotelgäste zum Frühstück nicht eingedeckt.","",""],
+["Frühdienst","Restaurant","Alle","Service","Menüs abfragen","","",""],
+["Frühdienst","Restaurant","Alle","Service","Anreisende Gäste oder à la carte Gäste platzieren und bedienen","","",""],
+["Frühdienst","Restaurant","Alle","Service","Halle, Lounge und Bar öfters durchschauen, ob Gäste sitzen","Gäste in Halle, Lounge und Bar werden sonst übersehen.","",""],
+["Frühdienst","Restaurant","Alle","Service","Juicegläser waschen","Nebenbei, wenn Zeit ist.","",""],
+["Frühdienst","Restaurant","Alle","Abschluss","Alle Tischtücher wechseln, aufräumen, Staub wischen","","nach dem Frühstück",""],
+["Frühdienst","Restaurant","Alle","Abschluss","Nach dem Frühstück Restaurant aufräumen, Kissen aufschütteln, Bänke und Stühle hochstellen","","",""],
+["Frühdienst","Restaurant","Alle","Abschluss","Restaurant saugen (täglich) und wischen (nach ausgehängtem Plan)","","",""],
+["Frühdienst","Restaurant","Alle","Abschluss","Weinraum kontrollieren: aufräumen und bei Bedarf die Tischdecke wechseln","","",""],
+["Frühdienst","Restaurant","Alle","Abschluss","Kerzen reinigen und Sand wechseln (wenn nötig)","","",""],
+["Frühdienst","Restaurant","Alle","Abschluss","Salz und Pfeffer auffüllen","","",""],
+["Frühdienst","Restaurant","Alle","Abschluss","Diverse Aufräumarbeiten: Blumen gießen, Bilder und Lampen abstauben","","",""],
+["Frühdienst","Restaurant","Alle","Vorbereitung nächster Dienst","Nach dem Frühstück nur aufräumen – NICHT eindecken","Mittags à la carte: eingedeckt wird erst, wenn der Gast kommt. Ausnahme Sonntag. Fürs HP-Abendessen ab 15:00. Aufleger wechseln; Tischdecke Mi und Sa.","",""],
+["Frühdienst","Restaurant","Alle","Vorbereitung nächster Dienst","Sonntag: nach dem Frühstück für den à-la-carte-Mittag festlich eindecken","Nur sonntags.","So",""],
+["Frühdienst","Restaurant","Alle","Vorbereitung nächster Dienst","Essensstand erstellen – Zusammenfassung der gewählten Menüs für die Küche","NEUE REGEL: macht die Station Restaurant (vorher Station III). Beim Frühstück sind alle gleich – Chef de Rang oder Commi.","",""],
+["Frühdienst","Restaurant","Alle","Vorbereitung nächster Dienst","Mise en place fürs Aufdecken vorbereiten","","",""],
+["Frühdienst","Restaurant","Alle","Vorbereitung nächster Dienst","Tagesservietten falten und für abends in die Fächer legen","","",""],
+["Frühdienst","Frühstück","Frühstücksdame","Vorbereitung","Ankommen: überall Licht anschalten, Kaffeemaschine im Restaurant und in der Küche einschalten (beide Kaffeebehälter kontrollieren), Spülmaschine einschalten, Musik an","Erster Schritt beim Ankommen.","",""],
+["Frühdienst","Frühstück","Frühstücksdame","Vorbereitung","Alle Waren fürs Frühstücksbuffet aus dem Kühlhaus ins Buffet tragen","Nach dem Einschalten, vor der eigenen Frühstückspause.","",""],
+["Frühdienst","Frühstück","Frühstücksdame","Vorbereitung","Buffet herrichten","","",""],
+["Frühdienst","Frühstück","Frühstücksdame","Vorbereitung","Zitronen schneiden","","",""],
+["Frühdienst","Frühstück","Frühstücksdame","Vorbereitung","Eigene Frühstückspause","Erst wenn das Buffet aufgebaut ist.","07:00–07:30",""],
+["Frühdienst","Frühstück","Frühstücksdame","Service","Buffet betreuen: mit dem Koch abstimmen, Gäste am Buffet betreuen, alles nachfüllen was fehlt oder leer wird, Geschirr auffüllen, Gläser aus dem Backoffice holen","Hauptaufgabe während des Service.","",""],
+["Frühdienst","Frühstück","Frühstücksdame","Service","Buffet immer nachfüllen","Durchgehend während des Service.","",""],
+["Frühdienst","Frühstück","Frühstücksdame","Service","Säfte auffüllen","","",""],
+["Frühdienst","Frühstück","Frühstücksdame","Service","Diverse Gegenstände auffüllen (Nüsse, Müsli)","","ab 10:00",""],
+["Frühdienst","Frühstück","Frühstücksdame","Service","Juicegläser waschen","Teilweise nebenbei, danach übernimmt der Backoffice-Dienst (Mittag). Grundregel: jeder stellt seine Gläser in den Korb und spült, wenn der Korb voll ist.","",""],
+["Frühdienst","Frühstück","Frühstücksdame","Abschluss","Getränke und Speisen von allen Buffets verräumen","","",""],
+["Frühdienst","Frühstück","Frühstücksdame","Abschluss","Müslistation verräumen","","",""],
+["Frühdienst","Frühstück","Frühstücksdame","Abschluss","Toaster Station verräumen","","",""],
+["Frühdienst","Frühstück","Frühstücksdame","Abschluss","Gebäckstation verräumen","","",""],
+["Frühdienst","Frühstück","Frühstücksdame","Abschluss","Tees und Zucker verräumen","","",""],
+["Frühdienst","Frühstück","Frühstücksdame","Abschluss","Saft- und Teestation reinigen","","",""],
+["Frühdienst","Frühstück","Frühstücksdame","Abschluss","Reinigen aller Buffets","","",""],
+["Frühdienst","Frühstück","Frühstücksdame","Abschluss","Sauberkeit von Essig und Öl","Buffetdienst ist dafür verantwortlich.","",""],
+["Frühdienst","Frühstück","Frühstücksdame","Vorbereitung nächster Dienst","Frühstücksbuffet für den nächsten Tag vorbereiten: alles aufräumen und auffüllen","OFFEN: Details, was genau aufgefüllt und vorbereitet wird.","ab 10:30",""],
+["Frühdienst","Frühstück","Frühstücksdame","Vorbereitung nächster Dienst","Salat- und Käsestation für den Abend herrichten","Standard: nur das Salatbuffet. Bei Sonderaktionen am Abendbuffet (Vorspeisen/Suppen vom Buffet) muss der Frühstücksdienst mitvorbereiten.","",""],
+["Mittagsdienst","Restaurant","Mittagskellner","Vorbereitung","Bons auf der Kaffeemaschine in der Küche auflegen","Jede Station sammelt ihre Bons in einem Becher; mittags legt sie der Mittagskellner aus.","",""],
+["Mittagsdienst","Restaurant","Mittagskellner","Service","Gäste bedienen – auch auf der Terrasse, wenn geöffnet","Terrasse vorher herrichten.","",""],
+["Mittagsdienst","Restaurant","Mittagskellner","Service","Parmesan kontrollieren: Behälter bei Bedarf waschen, nach dem Auskühlen auffüllen und zurückstellen","","",""],
+["Mittagsdienst","Restaurant","Mittagskellner","Service","Backoffice und Weinraum kontrollieren: Sauberkeit, alles aufgefüllt und an seinem Platz","","",""],
+["Mittagsdienst","Restaurant","Mittagskellner","Abschluss","Die gesamte Wäsche aus der Waschküche holen und verräumen","","",""],
+["Mittagsdienst","Restaurant","Mittagskellner","Abschluss","Diverse Aufräumaktivitäten","Lückenfüller – niemand steht herum oder spielt am Handy, wenn gerade nichts los ist.","",""],
+["Mittagsdienst","Restaurant","Mittagskellner","Vorbereitung nächster Dienst","Servietten für die nächsten Tage falten – für Restaurant und Saal, je nach Bedarf","","",""],
+["Mittagsdienst","Restaurant","Mittagskellner","Vorbereitung nächster Dienst","Bei schönem Wetter ab 14:00 nach und nach im Restaurant für den Abend eindecken","Was er nicht schafft, übergibt er dem À-la-carte-Kellner.","ab 14:00",""],
+["Mittagsdienst","Bar","Alle","Vorbereitung","Wein-Mise-en-place bei der Schank herrichten","Gehört zum Mittagsdienst.","",""],
+["Nachmittagsdienst","À la carte","À-la-carte-Kellner","Vorbereitung","Beim Ankommen kontrollieren, ob für den Abend richtig eingedeckt ist","","",""],
+["Nachmittagsdienst","À la carte","À-la-carte-Kellner","Vorbereitung","Zirbenstube kontrollieren: Anzahl, Aufteilung, Geburtstage und andere Anlässe","","",""],
+["Nachmittagsdienst","À la carte","À-la-carte-Kellner","Vorbereitung","Eigene Mise en place auffüllen","","",""],
+["Nachmittagsdienst","À la carte","À-la-carte-Kellner","Service","Gäste an der Bar und an der Rezeption betreuen","","",""],
+["Nachmittagsdienst","À la carte","À-la-carte-Kellner","Service","Offene Aufgaben des Mittagskellners übernehmen, wenn dieser wegen vieler Gäste nicht fertig geworden ist","","",""],
+["Nachmittagsdienst","À la carte","À-la-carte-Kellner","Vorbereitung nächster Dienst","Sobald der Barkeeper da ist: Eindecken im Restaurant beginnen bzw. fertigmachen","Solange der Barkeeper nicht da ist, ist der À-la-carte-Kellner allein und muss bei den Gästen bleiben.","",""],
+["Nachmittagsdienst","Restaurant","À-la-carte-Kellner","Vorbereitung nächster Dienst","Restaurant eindecken","12:00–14:00 große Karte, 14:00–17:30 nur Jausenkarte – in dieser Zeit ist Luft zum Eindecken. Ab 18:00 nur noch Halbpensionsgäste.","ab 14:00",""],
+["Abenddienst","Alle","Alle","Vorbereitung","Dienstbesprechung im Saal vor dem Käsebuffet","Tägliche Dienstbesprechung, geleitet vom Oberkellner.","18:00",""],
+["Abenddienst","Alle","Oberkellner","Vorbereitung","Licht auf Abenddienst schalten","","",""],
+["Abenddienst","Alle","Oberkellner","Vorbereitung","Saal öffnen","Nach der Dienstbesprechung beteiligen sich alle an den Vorbereitungen.","18:30",""],
+["Abenddienst","Alle","Commi de Rang","Vorbereitung","Um 18:00 Mise en place für das Frühstück auf den Personaltisch holen: Besteck, kleine Löffel, Tassen, Untertassen, Servietten","Machen die Commis gemeinsam, damit nach dem Abendservice schnell eingedeckt werden kann.","18:00",""],
+["Abenddienst","Alle","Alle","Vorbereitung","Servietten vorfalten","Wenn Zeit ist.","",""],
+["Abenddienst","Alle","Alle","Vorbereitung","Gedecke verteilen","Nur Mittwoch und Samstag.","Mi, Sa",""],
+["Abenddienst","Alle","Alle","Vorbereitung","Brot verteilen","Nur Mittwoch und Samstag.","Mi, Sa",""],
+["Abenddienst","Alle","Alle","Vorbereitung","Salatbuffet im Speisesaal herrichten","Macht der jeweils eingeteilte Salatdienst – nicht immer dieselbe Person.","ab 17:00","Salatdienst"],
+["Abenddienst","Alle","Alle","Vorbereitung","Brot backen","","ab 17:00","Salatdienst"],
+["Abenddienst","Alle","Alle","Vorbereitung","Schurgebäck backen","Nur Mittwoch und Samstag.","ab 17:00","Salatdienst"],
+["Abenddienst","Alle","Alle","Service","Salatbuffet immer kontrollieren und nachfüllen","Nicht der Oberkellner. Wird vor Ort eingeteilt.","",""],
+["Abenddienst","Alle","Chef de Rang","Service","Getränke zum Abendessen buchen, abrechnen und Belege auf den Tisch legen","Nur der Chef de Rang – kein Commi hat einen Schlüssel.","",""],
+["Abenddienst","Alle","Alle","Service","Bänke und Sessel abwischen, Pölster richten","","",""],
+["Abenddienst","Alle","Alle","Abschluss","Zirbenstube wischen","Mit „Stube“ ist im Haus immer die Zirbenstube gemeint.","",""],
+["Abenddienst","Alle","Alle","Abschluss","Kontrolle, dass alle Fenster im Saal geschlossen sind","Abschlusskontrolle jeder Station.","",""],
+["Abenddienst","Alle","Alle","Vorbereitung nächster Dienst","Station aufräumen, Bänke abwischen, zum Frühstück eindecken vorbereiten","Der Commi, der das Salatbuffet gemacht hat, kontrolliert noch einmal das Buffet; die anderen decken fürs Frühstück ein.","",""],
+["Abenddienst","I","Alle","Vorbereitung","Kerzen im Saal anzünden","","",""],
+["Abenddienst","I","Commi de Rang","Service","BackOffice aufräumen","Commi der Station I macht am Abend das BackOffice.","",""],
+["Abenddienst","I","Alle","Abschluss","Weine nach dem Abendservice abräumen","","",""],
+["Abenddienst","II","Alle","Vorbereitung","Weinempfehlung-Station: Weine von den Vortagen verteilen und Weinempfehlung komplettieren","Station II bereitet vor. Abgeräumt werden die Weine nach dem Service von Station I.","",""],
+["Abenddienst","II","Commi de Rang","Abschluss","Salatbuffet verräumen und Frühstücksbuffet vorbereiten","Geht erst, wenn der Oberkellner es sagt. Am Ende noch einmal kontrollieren, ob im Buffet alles fertig ist.","ab 20:30",""],
+["Abenddienst","III","Alle","Vorbereitung","Bei der restlichen Vorbereitung helfen; 2x pro Woche Butteraufstriche machen","","",""],
+["Abenddienst","III","Commi de Rang","Abschluss","Käsebuffet abräumen: Platten und Chutneys in die Küche bringen, die beiden Kühlschubladen über den gemeinsamen Schalter ausschalten und gründlich reinigen, auch von oben; danach weiter im Service helfen","Beide Kühlschubladen hängen an einem einzigen Schalter. Eine Vorbereitung durch den Service gibt es nicht – am nächsten Tag richtet der Koch alles komplett selbst her.","",""],
+["Abenddienst","Restaurant","Chef de Rang","Service","Rechnungen machen","Abenddienst im Restaurant.","",""],
+["Abenddienst","Restaurant","À-la-carte-Kellner","Service","Kaffeemaschine bedienen","Am Abend macht die Kaffeemaschine der À-la-carte-Kellner, die Rechnungen der Chef de Rang.","",""],
+["Abenddienst","À la carte","À-la-carte-Kellner","Vorbereitung","Brot vom Nachmittag verräumen","","17:00",""],
+["Abenddienst","Bar","Barkeeper","Vorbereitung","Musik auf „Dinner for two“ umschalten","","",""],
+["Abenddienst","Bar","Alle","Vorbereitung","Musik im Saal einschalten","Musik macht der Barkeeper. Das Licht schaltet der Oberkellner.","",""],
+["Abenddienst","Backoffice","Commi de Rang","Vorbereitung","Back Office herrichten","Gehört zum Back-Office-Dienst (nachmittags und abends).","",""],
+["Abenddienst","Backoffice","Commi de Rang","Vorbereitung","Bonkübel Küche und Schank leeren","","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Grundregel: alle Arbeiten mit Schwamm und Spülmittel gründlich erledigen – alle Oberflächen","Gilt für den gesamten Endputz im Backoffice.","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Alle Gläser spülen und gleich verräumen","Jeder Korb wird durchgespült UND verräumt. Spülen allein ist die Aufgabe nicht.","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Bar-Gläser selbst zurück zur Bar bringen und dort verräumen","Die gehören zurück und verräumt – nicht auf einem Tablett stehen lassen für den Barkeeper.","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Back Office aufräumen und putzen","","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Alle Frontflächen reinigen","","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Schubladenseite alles putzen (Weinterminal, Kassa)","Mit Desinfektionsmittel.","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Kasse abwischen","","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Gitter von der Schank entnehmen und durchwaschen","","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Schankanlage putzen, anschließend Gitter wieder rauf und Tablett darauf","","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Über die Schankanlage und andere Geräte putzen","","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Alle Tabletts putzen","","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Beide Servierwägen putzen","","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Wagen putzen","","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Alle Schränke abwischen","","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Schubladen mit den Weinkörben und Wasserkörben entnehmen, durchwaschen und abwischen","","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Mitarbeiterablagen und Mitarbeiterschrank putzen","","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Alle Becher im Back Office ausleeren","Dort landet der Müll vom Flaschenöffnen.","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Papiereimer neben der Kasse ausleeren","","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Becher und Eimer austauschen, wenn sie dreckig sind","Ausleeren allein reicht nicht.","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Polsterung abwischen und Polster aufschütteln","","",""],
+["Abenddienst","Backoffice","Commi de Rang","Abschluss","Wer früher fertig ist, hilft den anderen","Hausregel. Gehört auf jedes Blatt.","",""],
+["Abenddienst","Backoffice","Commi de Rang","Vorbereitung nächster Dienst","Weinstation im Backoffice aufräumen, abwischen und wieder schön hinstellen","Eigene Weinstation im Backoffice mit Servietten, Weinhangel und Weintellern für Rot- und Weißwein. Nicht zu verwechseln mit der Weinempfehlung-Station im Saal (Station II).","",""],
+["Schlussdienst","Alle","Alle","Service","Tische der Kollegen übernehmen, die nach Hause gehen","Betreut die restlichen Halbpensionsgäste weiter.","",""],
+["Schlussdienst","Alle","Alle","Abschluss","An der Bar und im Backoffice aushelfen, solange noch jemand da ist","Hilft überall mit, bis Schluss ist.","",""],
+["Schlussdienst","Alle","Alle","Vorbereitung nächster Dienst","Aufräumen und fürs Frühstück eindecken","Nachdem die anderen gegangen sind.","",""]
+];
+</script>
+<header class="top"><div class="wrap">
+  <p class="eyebrow">Hotel Tirol · Service</p>
+  <h1 id="pageTitle">Stationen und Dienste</h1>
+  <p class="sub">Wähle Schicht und Station. Du bekommst eine Liste: alles, was du auf dieser Station machst, in der Reihenfolge Vorbereitung, Service, Abschluss und Vorbereitung für den nächsten Dienst.</p>
+</div></header>
+
+<div class="rail"><div class="wrap">
+  <div class="rowf"><span class="flabel">Schicht</span><span id="fSchicht" style="display:contents"></span></div>
+  <div class="rowf"><span class="flabel">Station</span><span id="fStation" style="display:contents"></span></div>
+  <div class="rowf" id="posRow"><span class="flabel">Position</span><span id="fPos" style="display:contents"></span></div>
+</div></div>
+
+<main><div class="wrap">
+  <div class="sheethead">
+    <h2 id="sheetTitle"></h2>
+    <span class="gmeta" id="sheetMeta"></span>
+  </div>
+  <div id="out"></div>
+</div></main>
+<footer><div class="wrap">Stand: 23.11.2026 · Quelle: Hausdokumente und mündliche Festlegungen.</div></footer>
+
+<script>
+const SCHICHTEN=["Frühdienst","Mittagsdienst","Nachmittagsdienst","Abenddienst","Schlussdienst"];
+const PHASEN=["Vorbereitung","Service","Besonderheit","Abschluss","Vorbereitung nächster Dienst"];
+const PHKURZ=["Vorbereitung","Service","Besonderheit","Abschluss","Für den nächsten Dienst"];
+const STORDER=["I","II","III","Restaurant","Frühstück","Backoffice","Bar","À la carte","Alle"];
+const STLABEL={"I":"Station I","II":"Station II","III":"Station III","Frühstück":"Frühstücksdame","Alle":"Alle"};
+const EIGEN=["Frühstück"];
+const state={schicht:"Frühdienst",station:null,pos:"alle"};
+
+const uniq=a=>[...new Set(a)];
+function stationsOf(s){
+  let st=uniq(ROWS.filter(r=>r[0]===s).map(r=>r[1])).filter(x=>x!=="Alle");
+  if(!st.length)st=["Alle"];
+  return st.sort((a,b)=>STORDER.indexOf(a)-STORDER.indexOf(b));
+}
+function sheetRows(){
+  const mitAllen=state.station!=="Alle"&&!EIGEN.includes(state.station);
+  return ROWS.filter(r=>r[0]===state.schicht&&(r[1]===state.station||(mitAllen&&r[1]==="Alle")));
+}
+function positionsOf(){
+  return uniq(sheetRows().map(r=>r[2])).filter(p=>p!=="Alle").sort();
+}
+function chip(label,active,onclick){
+  const b=document.createElement("button");
+  b.className="chip";b.type="button";b.textContent=label;
+  b.setAttribute("aria-pressed",active?"true":"false");
+  b.addEventListener("click",onclick);return b;
+}
+function esc(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
+
+function renderFilters(){
+  const fs=document.getElementById("fSchicht");fs.textContent="";
+  SCHICHTEN.forEach(s=>fs.appendChild(chip(s,state.schicht===s,()=>{
+    state.schicht=s;state.station=stationsOf(s)[0];state.pos="alle";render()})));
+  const ft=document.getElementById("fStation");ft.textContent="";
+  stationsOf(state.schicht).forEach(s=>ft.appendChild(chip(STLABEL[s]||s,state.station===s,()=>{
+    state.station=s;state.pos="alle";render()})));
+  const positions=positionsOf();
+  const row=document.getElementById("posRow");
+  const fp=document.getElementById("fPos");fp.textContent="";
+  if(positions.length<2){row.hidden=true;state.pos="alle";return}
+  row.hidden=false;
+  fp.appendChild(chip("alle",state.pos==="alle",()=>{state.pos="alle";render()}));
+  positions.forEach(p=>fp.appendChild(chip(p,state.pos===p,()=>{state.pos=p;render()})));
+}
+
+function render(){
+  if(!state.station)state.station=stationsOf(state.schicht)[0];
+  renderFilters();
+  let rows=sheetRows();
+  if(state.pos!=="alle")rows=rows.filter(r=>r[2]===state.pos||r[2]==="Alle");
+  const label=STLABEL[state.station]||state.station;
+  document.getElementById("pageTitle").textContent=state.schicht+" · "+label;
+  document.title=state.schicht+" · "+label;
+  document.getElementById("sheetTitle").textContent=label;
+  document.getElementById("sheetMeta").textContent=rows.length+" Aufgaben"+(state.pos!=="alle"?" · "+state.pos:"");
+  const out=document.getElementById("out");out.textContent="";
+  if(!rows.length){out.innerHTML='<p class="empty">Keine Abläufe für diese Auswahl.</p>';return}
+  let n=0;
+  PHASEN.forEach((ph,pi)=>{
+    const pr=rows.filter(r=>r[3]===ph);if(!pr.length)return;
+    const sec=document.createElement("div");sec.className="phase";
+    const lab=document.createElement("div");lab.className="ph p"+pi;lab.textContent=PHKURZ[pi];
+    const ol=document.createElement("ol");ol.className="tasks";
+    pr.forEach(r=>{
+      n++;
+      const li=document.createElement("li");
+      const tags=[];
+      if(r[6])tags.push('<span class="tag time">'+esc(r[6])+'</span>');
+      if(r[2]&&r[2]!=="Alle")tags.push('<span class="tag pos">'+esc(r[2])+'</span>');
+      if(r[7])tags.push('<span class="tag resp">'+esc(r[7])+'</span>');
+      const subs=r[8]&&r[8].length?'<ul class="subs">'+r[8].map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul>':'';
+      li.innerHTML='<div class="tt"><span class="num">'+n+'</span><div class="tx">'
+        +'<p>'+esc(r[4])+'</p>'+subs
+        +(r[5]?'<p class="why">'+esc(r[5])+'</p>':'')
+        +(tags.length?'<div class="tags">'+tags.join("")+'</div>':'')
+        +'</div></div>';
+      ol.appendChild(li);
+    });
+    sec.append(lab,ol);out.appendChild(sec);
+  });
+}
+render();
+</script>
+</body></html>
