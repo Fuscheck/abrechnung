@@ -386,7 +386,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://pjfsbayqdxfszlejcivq.supabase.co";
 const SB_KEY="sb_publishable_gOox3QM_BEounIvIbQJ7mQ_YF2hDzw4";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-24 18:20";
+const APP_VERSION="2026-11-24 18:30";
 const LS="abrechnung-sync-v1";
 let sb=null;
 
@@ -517,11 +517,11 @@ function renderTag(){
   $("f-abrechnung").value=r.abrechnung?nf.format(r.abrechnung):"";
   $("f-barIst").value=r.barIst?nf.format(r.barIst):"";
   $("f-startgeld").value=nf.format(r.startgeld===undefined?DEF_START:r.startgeld);
-  applyLock();
   renderList("cards","cardsList","addCard");
   renderList("gutscheine","gutList","addGut");
   renderList("rechnungen","recList","addRec");
   renderOut();
+  applyLock();
 }
 function renderList(field,listId,addId){
   const r=rec(cur),list=$(listId);
@@ -532,18 +532,19 @@ function renderList(field,listId,addId){
     const inp=document.createElement("input");
     inp.type="text";inp.inputMode="decimal";inp.placeholder="0,00";
     inp.value=v?nf.format(v):"";
-    inp.oninput=()=>{ensure(cur)[field][i]=num(inp.value);markDirty(cur);renderOut();};
+    inp.oninput=()=>{if(isLocked(cur))return;ensure(cur)[field][i]=num(inp.value);markDirty(cur);renderOut();};
     const del=document.createElement("button");del.className="del";del.textContent="\u2715";
-    del.onclick=()=>{ensure(cur)[field].splice(i,1);markDirty(cur);
-      renderList(field,listId,addId);renderOut();};
+    del.onclick=()=>{if(isLocked(cur))return;ensure(cur)[field].splice(i,1);markDirty(cur);
+      renderList(field,listId,addId);renderOut();applyLock();};
     div.append(idx,inp,del);list.appendChild(div);
   });
   $(addId).style.display=(r[field]||[]).length>=MAXCARDS?"none":"block";
 }
 function addTo(field,listId,addId){
+  if(isLocked(cur))return;
   const r=ensure(cur);
   if(r[field].length>=MAXCARDS)return;
-  r[field].push(0);renderList(field,listId,addId);
+  r[field].push(0);renderList(field,listId,addId);applyLock();
   const ins=$(listId).querySelectorAll("input");if(ins.length)ins[ins.length-1].focus();
 }
 function ensure(k){if(!days[k])days[k]=BLANK();
@@ -578,7 +579,7 @@ function applyLock(){
 let sgOpen=false;
 function bindField(id,key){
   const el=$(id);
-  el.oninput=()=>{ensure(cur)[key]=num(el.value);markDirty(cur);renderOut();};
+  el.oninput=()=>{if(isLocked(cur))return;ensure(cur)[key]=num(el.value);markDirty(cur);renderOut();};
   el.onblur=()=>{const v=num(el.value);el.value=v?nf.format(v):"";};
 }
 
