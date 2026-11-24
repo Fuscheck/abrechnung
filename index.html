@@ -143,11 +143,12 @@ tr.lk td:first-child::after{content:" 🔒";font-size:10px}
         <label>Abrechnung (Gesamt)</label>
         <input type="text" inputmode="decimal" id="f-abrechnung" placeholder="0,00">
       </div>
-      <div class="fld">
+      <div class="fld" id="fld-sg">
         <label>Startgeld</label>
-        <div class="row">
-          <input type="text" inputmode="decimal" id="f-startgeld" placeholder="500,00" readonly>
-          <button class="btn" id="sgLock" style="flex:0 0 52px;padding:11px 0">🔒</button>
+        <button class="btn" id="sgOn" style="width:100%">Startgeld aktivieren</button>
+        <div class="row" id="sgRow" style="display:none">
+          <input type="text" inputmode="decimal" id="f-startgeld" placeholder="0,00">
+          <button class="btn" id="sgOff" style="flex:0 0 52px;padding:11px 0">✕</button>
         </div>
       </div>
       <div class="fld">
@@ -386,7 +387,7 @@ function dateLabel(s){const d=parseISO(s);
 function seasonOf(k){const L=SEASONS_();return L.find(s=>k>=s.start&&k<=s.end)||L[0];}
 
 /* ---------- State ---------- */
-const DEF_START=500;
+const DEF_START=null;
 const BLANK=()=>({abrechnung:0,cards:[],gutscheine:[],rechnungen:[],barIst:0,startgeld:DEF_START,locked:false});
 const LISTS={cards:"cards",gutscheine:"gutscheine",rechnungen:"rechnungen"};
 const sumL=a=>(a||[]).reduce((x,y)=>x+(+y||0),0);
@@ -401,11 +402,13 @@ function calc(r){
   const karten=sumL(r.cards),gut=sumL(r.gutscheine),rech=sumL(r.rechnungen);
   const abzug=gut+rech;
   const bar=(+r.abrechnung||0)-karten-abzug;
-  const sg=(r.startgeld===undefined?DEF_START:(+r.startgeld||0));
-  const barnet=(+r.barIst||0)-sg;
-  const tg=barnet-bar;
+  const sgOn=(r.startgeld!==null&&r.startgeld!==undefined);
+  const sg=sgOn?(+r.startgeld||0):0;
+  const hasIst=!!(+r.barIst);
+  const barnet=hasIst?(+r.barIst)-sg:0;
+  const tg=hasIst?barnet-bar:0;
   const tgp=(+r.abrechnung||0)?tg/(+r.abrechnung):0;
-  return{karten,gut,rech,abzug,bar,sg,barnet,tg,tgp,n:cntL(r.cards),nG:cntL(r.gutscheine),nR:cntL(r.rechnungen)};
+  return{karten,gut,rech,abzug,bar,sg,sgOn,hasIst,barnet,tg,tgp,n:cntL(r.cards),nG:cntL(r.gutscheine),nR:cntL(r.rechnungen)};
 }
 function hasData(r){return !!((+r.abrechnung)||(r.cards||[]).length||(r.gutscheine||[]).length||(r.rechnungen||[]).length||(+r.barIst));}
 function isLocked(k){const r=days[k];return !!(r&&r.locked);}
@@ -414,7 +417,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://pjfsbayqdxfszlejcivq.supabase.co";
 const SB_KEY="sb_publishable_gOox3QM_BEounIvIbQJ7mQ_YF2hDzw4";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-24 21:20";
+const APP_VERSION="2026-11-25 00:30";
 const LS="abrechnung-sync-v1";
 let sb=null;
 
@@ -449,7 +452,7 @@ async function flush(){
       cards:(r.cards||[]).map(Number),
       gutscheine:(r.gutscheine||[]).map(Number),rechnungen:(r.rechnungen||[]).map(Number),
       gutschein:sumL(r.gutscheine),or1:sumL(r.rechnungen),or2:0,
-      bar_ist:+r.barIst||0,startgeld:(r.startgeld===undefined?DEF_START:+r.startgeld||0),
+      bar_ist:+r.barIst||0,startgeld:((r.startgeld===null||r.startgeld===undefined)?null:(+r.startgeld||0)),
       locked:!!r.locked,trinkgeld:calc(r).tg,updated_at:new Date().toISOString()});
     else del.push(k);
   });
@@ -470,7 +473,7 @@ function rowToRec(r){
   if(!re.length){if(+r.or1>0)re.push(+r.or1);if(+r.or2>0)re.push(+r.or2);}
   const rec={abrechnung:+r.abrechnung||0,cards:arr(r.cards),gutscheine:g,rechnungen:re,
     barIst:+r.bar_ist||0,
-    startgeld:(r.startgeld===null||r.startgeld===undefined)?DEF_START:+r.startgeld,
+    startgeld:(r.startgeld===null||r.startgeld===undefined)?null:+r.startgeld,
     locked:!!r.locked};
   if(!rec.barIst&&+r.trinkgeld)rec.barIst=calc(rec).bar+(+r.trinkgeld);
   return rec;
@@ -544,7 +547,7 @@ function renderTag(){
   const r=rec(cur);
   $("f-abrechnung").value=r.abrechnung?nf.format(r.abrechnung):"";
   $("f-barIst").value=r.barIst?nf.format(r.barIst):"";
-  $("f-startgeld").value=nf.format(r.startgeld===undefined?DEF_START:r.startgeld);
+  $("f-startgeld").value=(r.startgeld!==null&&r.startgeld!==undefined&&r.startgeld)?nf.format(r.startgeld):"";
   renderList("cards","cardsList","addCard");
   renderList("gutscheine","gutList","addGut");
   renderList("rechnungen","recList","addRec");
@@ -583,10 +586,11 @@ function renderOut(){
   $("o-karten").textContent=eur(c.karten);
   $("o-abzug").textContent=eur(c.abzug);
   $("o-bar").textContent=eur(c.bar);
-  $("o-barnet").textContent=eur(c.barnet);
-  const tg=$("o-tg");tg.textContent=eur(c.tg);
-  tg.className="big "+(c.tg<-0.005?"neg":c.tg>0.005?"pos":"");
-  $("o-tgp").textContent=pct(c.tgp);
+  $("o-barnet").textContent=c.hasIst?eur(c.barnet):"–";
+  const tg=$("o-tg");
+  tg.textContent=c.hasIst?eur(c.tg):"–";
+  tg.className="big "+(!c.hasIst?"":(c.tg<-0.005?"neg":c.tg>0.005?"pos":""));
+  $("o-tgp").textContent=c.hasIst?pct(c.tgp):"–";
   $("cardCount").textContent=c.n?c.n+"×":"";
   $("gutCount").textContent=c.nG?c.nG+"×":"";
   $("recCount").textContent=c.nR?c.nR+"×":"";
@@ -595,8 +599,8 @@ function applyLock(){
   const lk=isLocked(cur);
   document.getElementById("v-tag").classList.toggle("locked-day",lk);
   ["f-abrechnung","f-barIst","f-startgeld"].forEach(i=>{$(i).readOnly=lk;});
-  if(!lk)$("f-startgeld").readOnly=!sgOpen;
-  ["addCard","addGut","addRec","toScheine","sgLock"].forEach(i=>{const e=$(i);if(e)e.style.display=lk?"none":"";});
+  renderSg();
+  ["addCard","addGut","addRec","toScheine"].forEach(i=>{const e=$(i);if(e)e.style.display=lk?"none":"";});
   document.querySelectorAll("#cardsList input,#gutList input,#recList input").forEach(i=>i.readOnly=lk);
   document.querySelectorAll("#cardsList .del,#gutList .del,#recList .del").forEach(b=>b.style.display=lk?"none":"");
   $("dayLock").textContent=lk?"Tag entsperren":"Tag abschließen";
@@ -604,7 +608,15 @@ function applyLock(){
   $("dayDel").style.display=lk?"none":"";
   $("dayState").textContent=lk?"Abgeschlossen – im Kalender markiert.":"";
 }
-let sgOpen=false;
+function renderSg(){
+  const r=rec(cur),lk=isLocked(cur);
+  const on=(r.startgeld!==null&&r.startgeld!==undefined);
+  $("sgRow").style.display=on?"":"none";
+  $("sgOn").style.display=(!on&&!lk)?"":"none";
+  $("sgOff").style.display=lk?"none":"";
+  $("f-startgeld").readOnly=lk;
+  $("fld-sg").style.display=(lk&&!on)?"none":"";
+}
 function bindField(id,key){
   const el=$(id);
   el.oninput=()=>{if(isLocked(cur))return;ensure(cur)[key]=num(el.value);markDirty(cur);renderOut();};
@@ -766,7 +778,8 @@ function calcNotes(){
     const el=document.querySelector("[data-s='"+d+"']");
     if(el)el.textContent=eur((notes[d]||0)*d);
   });
-  const s=notesSum(),bar=calc(rec(cur)).bar;
+  const r0=rec(cur),c0=calc(r0);
+  const s=notesSum(),bar=c0.bar+c0.sg;
   $("n-sum").textContent=eur(s);
   $("n-day").textContent="("+dateLabel(cur).slice(0,6)+")";
   $("n-bar").textContent=eur(bar);
@@ -876,12 +889,18 @@ loadLocal();
 bindField("f-abrechnung","abrechnung");
 bindField("f-barIst","barIst");
 bindField("f-startgeld","startgeld");
-$("sgLock").onclick=()=>{
+$("sgOn").onclick=()=>{
   if(isLocked(cur))return;
-  sgOpen=!sgOpen;
-  $("f-startgeld").readOnly=!sgOpen;
-  $("sgLock").textContent=sgOpen?"🔓":"🔒";
-  if(sgOpen)$("f-startgeld").focus();
+  ensure(cur).startgeld=0;markDirty(cur);
+  $("f-startgeld").value="";
+  renderSg();renderOut();
+  $("f-startgeld").focus();
+};
+$("sgOff").onclick=()=>{
+  if(isLocked(cur))return;
+  ensure(cur).startgeld=null;markDirty(cur);
+  $("f-startgeld").value="";
+  renderSg();renderOut();
 };
 $("toScheine").onclick=()=>{show("scheine");window.scrollTo(0,0);};
 $("dayLock").onclick=()=>{
