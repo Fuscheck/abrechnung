@@ -22,19 +22,19 @@
 body{background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.5;margin:0}
 .wrap{max-width:1040px;margin:0 auto;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
 header.top{border-bottom:1px solid var(--line)}
-header.top .wrap{padding-block:20px 14px}
+header.top .wrap{padding-block:10px 8px}
 .eyebrow{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 6px}
 h1{font-family:var(--display);font-weight:700;font-size:clamp(1.4rem,5vw,2.1rem);line-height:1.1;margin:0}
 .sub{color:var(--muted);margin:10px 0 0;max-width:62ch;font-size:.9rem}
 .rail{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
-.rail .wrap{padding-block:10px}
+.rail .wrap{padding-block:8px}
 .rowf{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
 .rowf+.rowf{margin-top:8px}
 .flabel{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);min-width:68px;flex:0 0 auto}
 button.chip{font:inherit;font-size:.82rem;padding:6px 12px;border-radius:999px;border:1px solid var(--line);
   background:var(--surface);color:var(--fg);cursor:pointer}
 button.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
-main .wrap{padding-block:20px 48px}
+main .wrap{padding-block:14px 28px}
 .sheethead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--fg);padding-bottom:7px;margin-bottom:18px}
 .sheethead h2{font-family:var(--display);font-size:1.25rem;margin:0;font-weight:700}
 .gmeta{font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -209,12 +209,6 @@ const ROWS = [
 ["Schlussdienst","Alle","Alle","Vorbereitung nächster Dienst","Aufräumen und fürs Frühstück eindecken","Nachdem die anderen gegangen sind.","",""]
 ];
 </script>
-<header class="top"><div class="wrap">
-  <p class="eyebrow">Hotel Tirol · Service</p>
-  <h1 id="pageTitle">Stationen und Dienste</h1>
-  <p class="sub">Wähle Schicht und Station. Du bekommst eine Liste: alles, was du auf dieser Station machst, in der Reihenfolge Vorbereitung, Service, Abschluss und Vorbereitung für den nächsten Dienst.</p>
-</div></header>
-
 <div class="rail"><div class="wrap">
   <div class="rowf"><span class="flabel">Schicht</span><span id="fSchicht" style="display:contents"></span></div>
   <div class="rowf"><span class="flabel">Station</span><span id="fStation" style="display:contents"></span></div>
@@ -228,7 +222,7 @@ const ROWS = [
   </div>
   <div id="out"></div>
 </div></main>
-<footer><div class="wrap">Stand: 23.11.2026 · Quelle: Hausdokumente und mündliche Festlegungen.</div></footer>
+
 
 <script>
 const SCHICHTEN=["Frühdienst","Mittagsdienst","Nachmittagsdienst","Abenddienst","Schlussdienst"];
@@ -282,7 +276,6 @@ function render(){
   let rows=sheetRows();
   if(state.pos!=="alle")rows=rows.filter(r=>r[2]===state.pos||r[2]==="Alle");
   const label=STLABEL[state.station]||state.station;
-  document.getElementById("pageTitle").textContent=state.schicht+" · "+label;
   document.title=state.schicht+" · "+label;
   document.getElementById("sheetTitle").textContent=label;
   document.getElementById("sheetMeta").textContent=rows.length+" Aufgaben"+(state.pos!=="alle"?" · "+state.pos:"");
