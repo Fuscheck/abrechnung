@@ -95,6 +95,9 @@ tr.clk{cursor:pointer}
 tr.clk:active{background:var(--card2)}
 tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
 .hide{display:none}
+.locked-day input,.locked-day textarea,.locked-day select{opacity:.55}
+.lockmark{font-size:13px;color:var(--warn);margin-left:6px}
+tr.lk td:first-child::after{content:" 🔒";font-size:10px}
 .startlogo{text-align:center;margin:6px 0 14px}
 .startlogo img{width:min(52vw,200px)}
 .hello{display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 12px}
@@ -234,8 +237,18 @@ nav button{position:relative}
         <input type="text" inputmode="decimal" id="f-abrechnung" placeholder="0,00">
       </div>
       <div class="fld">
-        <label>Bargeld im Geldbeutel (Ist)</label>
-        <input type="text" inputmode="decimal" id="f-barIst" placeholder="0,00">
+        <label>Startgeld</label>
+        <div class="row">
+          <input type="text" inputmode="decimal" id="f-startgeld" placeholder="500,00" readonly>
+          <button class="btn" id="sgLock" style="flex:0 0 52px;padding:11px 0">🔒</button>
+        </div>
+      </div>
+      <div class="fld">
+        <label>Bargeld im Geldbeutel (Ist, mit Startgeld)</label>
+        <div class="row">
+          <input type="text" inputmode="decimal" id="f-barIst" placeholder="0,00">
+          <button class="btn" id="toScheine" style="flex:0 0 52px;padding:11px 0">💶</button>
+        </div>
       </div>
     </div>
 
@@ -262,8 +275,16 @@ nav button{position:relative}
       <div class="kv"><span>Kartenzahlungen zusammen</span><b id="o-karten">–</b></div>
       <div class="kv"><span>Gutschein + offene Rechnungen</span><b id="o-abzug">–</b></div>
       <div class="kv"><span>Barzahlung (Soll)</span><b id="o-bar">–</b></div>
+      <div class="kv"><span>Bargeld ohne Startgeld</span><b id="o-barnet">–</b></div>
       <div class="kv"><span>Trinkgeld</span><b class="big" id="o-tg">–</b></div>
       <div class="kv"><span>Trinkgeld %</span><b id="o-tgp">–</b></div>
+    </div>
+
+    <div class="card">
+      <h2>Tag</h2>
+      <button class="btn acc" id="dayLock" style="width:100%">Tag abschließen</button>
+      <button class="btn ghost" id="dayDel" style="width:100%;margin-top:8px;color:var(--bad)">Tag löschen</button>
+      <div class="note" id="dayState"></div>
     </div>
   </section>
 
@@ -472,7 +493,8 @@ function dateLabel(s){const d=parseISO(s);
 function seasonOf(k){const L=SEASONS_();return L.find(s=>k>=s.start&&k<=s.end)||L[0];}
 
 /* ---------- State ---------- */
-const BLANK=()=>({abrechnung:0,cards:[],gutscheine:[],rechnungen:[],barIst:0});
+const DEF_START=500;
+const BLANK=()=>({abrechnung:0,cards:[],gutscheine:[],rechnungen:[],barIst:0,startgeld:DEF_START,locked:false});
 const LISTS={cards:"cards",gutscheine:"gutscheine",rechnungen:"rechnungen"};
 const sumL=a=>(a||[]).reduce((x,y)=>x+(+y||0),0);
 const cntL=a=>(a||[]).filter(v=>+v>0).length;
@@ -486,17 +508,20 @@ function calc(r){
   const karten=sumL(r.cards),gut=sumL(r.gutscheine),rech=sumL(r.rechnungen);
   const abzug=gut+rech;
   const bar=(+r.abrechnung||0)-karten-abzug;
-  const tg=(+r.barIst||0)-bar;
+  const sg=(r.startgeld===undefined?DEF_START:(+r.startgeld||0));
+  const barnet=(+r.barIst||0)-sg;
+  const tg=barnet-bar;
   const tgp=(+r.abrechnung||0)?tg/(+r.abrechnung):0;
-  return{karten,gut,rech,abzug,bar,tg,tgp,n:cntL(r.cards),nG:cntL(r.gutscheine),nR:cntL(r.rechnungen)};
+  return{karten,gut,rech,abzug,bar,sg,barnet,tg,tgp,n:cntL(r.cards),nG:cntL(r.gutscheine),nR:cntL(r.rechnungen)};
 }
 function hasData(r){return !!((+r.abrechnung)||(r.cards||[]).length||(r.gutscheine||[]).length||(r.rechnungen||[]).length||(+r.barIst));}
+function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 
 /* ---------- Persistence (Supabase) ---------- */
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-24 07:40";
+const APP_VERSION="2026-11-24 18:40";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -510,6 +535,8 @@ function loadLocal(){
   }catch(e){}
   Object.values(days).forEach(r=>{
     if(!Array.isArray(r.cards))r.cards=[];
+    if(r.startgeld===undefined)r.startgeld=DEF_START;
+    if(r.locked===undefined)r.locked=false;
     if(!r.gutscheine)r.gutscheine=[];
     if(!r.rechnungen)r.rechnungen=[];
     if(r.barIst===undefined)r.barIst=0;
@@ -529,7 +556,8 @@ async function flush(){
       cards:(r.cards||[]).map(Number),
       gutscheine:(r.gutscheine||[]).map(Number),rechnungen:(r.rechnungen||[]).map(Number),
       gutschein:sumL(r.gutscheine),or1:sumL(r.rechnungen),or2:0,
-      bar_ist:+r.barIst||0,trinkgeld:calc(r).tg,updated_at:new Date().toISOString()});
+      bar_ist:+r.barIst||0,startgeld:(r.startgeld===undefined?DEF_START:+r.startgeld||0),
+      locked:!!r.locked,trinkgeld:calc(r).tg,updated_at:new Date().toISOString()});
     else del.push(k);
   });
   try{
@@ -548,7 +576,9 @@ function rowToRec(r){
   if(!g.length&&+r.gutschein>0)g=[+r.gutschein];
   if(!re.length){if(+r.or1>0)re.push(+r.or1);if(+r.or2>0)re.push(+r.or2);}
   const rec={abrechnung:+r.abrechnung||0,cards:arr(r.cards),gutscheine:g,rechnungen:re,
-    barIst:+r.bar_ist||0};
+    barIst:+r.bar_ist||0,
+    startgeld:(r.startgeld===null||r.startgeld===undefined)?DEF_START:+r.startgeld,
+    locked:!!r.locked};
   if(!rec.barIst&&+r.trinkgeld)rec.barIst=calc(rec).bar+(+r.trinkgeld);
   return rec;
 }
@@ -615,16 +645,20 @@ function importData(file){
 
 /* ---------- Tag view ---------- */
 function renderTag(){
+  $("dName").innerHTML="";
   $("dName").textContent=dayLabel(cur);
+  if(isLocked(cur)){const l=document.createElement("em");l.className="lockmark";l.textContent="🔒";$("dName").appendChild(l);}
   $("dDate").textContent=dateLabel(cur);
   $("dPick").value=cur;
   const r=rec(cur);
   $("f-abrechnung").value=r.abrechnung?nf.format(r.abrechnung):"";
   $("f-barIst").value=r.barIst?nf.format(r.barIst):"";
+  $("f-startgeld").value=nf.format(r.startgeld===undefined?DEF_START:r.startgeld);
   renderList("cards","cardsList","addCard");
   renderList("gutscheine","gutList","addGut");
   renderList("rechnungen","recList","addRec");
   renderOut();
+  applyLock();
 }
 function renderList(field,listId,addId){
   const r=rec(cur),list=$(listId);
@@ -635,18 +669,19 @@ function renderList(field,listId,addId){
     const inp=document.createElement("input");
     inp.type="text";inp.inputMode="decimal";inp.placeholder="0,00";
     inp.value=v?nf.format(v):"";
-    inp.oninput=()=>{ensure(cur)[field][i]=num(inp.value);markDirty(cur);renderOut();};
+    inp.oninput=()=>{if(isLocked(cur))return;ensure(cur)[field][i]=num(inp.value);markDirty(cur);renderOut();};
     const del=document.createElement("button");del.className="del";del.textContent="\u2715";
-    del.onclick=()=>{ensure(cur)[field].splice(i,1);markDirty(cur);
-      renderList(field,listId,addId);renderOut();};
+    del.onclick=()=>{if(isLocked(cur))return;ensure(cur)[field].splice(i,1);markDirty(cur);
+      renderList(field,listId,addId);renderOut();applyLock();};
     div.append(idx,inp,del);list.appendChild(div);
   });
   $(addId).style.display=(r[field]||[]).length>=MAXCARDS?"none":"block";
 }
 function addTo(field,listId,addId){
+  if(isLocked(cur))return;
   const r=ensure(cur);
   if(r[field].length>=MAXCARDS)return;
-  r[field].push(0);renderList(field,listId,addId);
+  r[field].push(0);renderList(field,listId,addId);applyLock();
   const ins=$(listId).querySelectorAll("input");if(ins.length)ins[ins.length-1].focus();
 }
 function ensure(k){if(!days[k])days[k]=BLANK();
@@ -657,6 +692,7 @@ function renderOut(){
   $("o-karten").textContent=eur(c.karten);
   $("o-abzug").textContent=eur(c.abzug);
   $("o-bar").textContent=eur(c.bar);
+  $("o-barnet").textContent=eur(c.barnet);
   const tg=$("o-tg");tg.textContent=eur(c.tg);
   tg.className="big "+(c.tg<-0.005?"neg":c.tg>0.005?"pos":"");
   $("o-tgp").textContent=pct(c.tgp);
@@ -664,9 +700,23 @@ function renderOut(){
   $("gutCount").textContent=c.nG?c.nG+"×":"";
   $("recCount").textContent=c.nR?c.nR+"×":"";
 }
+function applyLock(){
+  const lk=isLocked(cur);
+  document.getElementById("v-tag").classList.toggle("locked-day",lk);
+  ["f-abrechnung","f-barIst","f-startgeld"].forEach(i=>{$(i).readOnly=lk;});
+  if(!lk)$("f-startgeld").readOnly=!sgOpen;
+  ["addCard","addGut","addRec","toScheine","sgLock"].forEach(i=>{const e=$(i);if(e)e.style.display=lk?"none":"";});
+  document.querySelectorAll("#cardsList input,#gutList input,#recList input").forEach(i=>i.readOnly=lk);
+  document.querySelectorAll("#cardsList .del,#gutList .del,#recList .del").forEach(b=>b.style.display=lk?"none":"");
+  $("dayLock").textContent=lk?"Tag entsperren":"Tag abschließen";
+  $("dayLock").className=lk?"btn":"btn acc";
+  $("dayDel").style.display=lk?"none":"";
+  $("dayState").textContent=lk?"Abgeschlossen – im Kalender markiert.":"";
+}
+let sgOpen=false;
 function bindField(id,key){
   const el=$(id);
-  el.oninput=()=>{ensure(cur)[key]=num(el.value);markDirty(cur);renderOut();};
+  el.oninput=()=>{if(isLocked(cur))return;ensure(cur)[key]=num(el.value);markDirty(cur);renderOut();};
   el.onblur=()=>{const v=num(el.value);el.value=v?nf.format(v):"";};
 }
 
@@ -687,7 +737,7 @@ function renderSaison(){
   const tb=$("sRows");tb.innerHTML="";
   keys.slice().reverse().forEach(k=>{
     const r=days[k],c=calc(r);
-    const tr=document.createElement("tr");tr.className="clk";
+    const tr=document.createElement("tr");tr.className="clk"+(r.locked?" lk":"");
     tr.innerHTML="<td>"+dateLabel(k).slice(0,6)+"<br><span style='color:var(--dim);font-size:11px'>"
       +DAYNAMES[parseISO(k).getDay()].slice(0,2)+"</span></td>"
       +"<td>"+nf.format(r.abrechnung)+"</td><td>"+nf.format(c.karten)+"</td>"
@@ -725,7 +775,7 @@ function renderBericht(){
   const tb=$("rRows");tb.innerHTML="";
   keys.slice().reverse().forEach(k=>{
     const r=days[k],c=calc(r);
-    const tr=document.createElement("tr");tr.className="clk";
+    const tr=document.createElement("tr");tr.className="clk"+(r.locked?" lk":"");
     tr.innerHTML="<td>"+dateLabel(k).slice(0,6)+"<br><span style='color:var(--dim);font-size:11px'>"
       +DAYNAMES[parseISO(k).getDay()].slice(0,2)+"</span></td>"
       +"<td>"+nf.format(r.abrechnung)+"</td><td>"+nf.format(c.karten)+"</td>"
@@ -1152,6 +1202,32 @@ if("serviceWorker" in navigator){window.addEventListener("load",()=>{
 loadLocal();
 bindField("f-abrechnung","abrechnung");
 bindField("f-barIst","barIst");
+bindField("f-startgeld","startgeld");
+$("sgLock").onclick=()=>{
+  if(isLocked(cur))return;
+  sgOpen=!sgOpen;
+  $("f-startgeld").readOnly=!sgOpen;
+  $("sgLock").textContent=sgOpen?"🔓":"🔒";
+  if(sgOpen)$("f-startgeld").focus();
+};
+$("toScheine").onclick=()=>{show("scheine");window.scrollTo(0,0);};
+$("dayLock").onclick=()=>{
+  const r=ensure(cur);
+  if(r.locked){
+    if(!confirm("Tag wieder zum Ändern öffnen?"))return;
+    r.locked=false;
+  }else{
+    if(!hasData(r)){alert("Für diesen Tag ist nichts erfasst.");return;}
+    r.locked=true;
+  }
+  markDirty(cur);renderTag();renderSaison();
+};
+$("dayDel").onclick=()=>{
+  if(!confirm("Diesen Tag wirklich komplett löschen? Das lässt sich nicht rückgängig machen."))return;
+  delete days[cur];
+  dirty.add(cur);saveLocal();flush();
+  renderTag();renderSaison();
+};
 $("addCard").onclick=()=>addTo("cards","cardsList","addCard");
 $("addGut").onclick=()=>addTo("gutscheine","gutList","addGut");
 $("addRec").onclick=()=>addTo("rechnungen","recList","addRec");
@@ -1186,6 +1262,7 @@ $("b-saison").onclick=()=>{const s=seasonOf(iso(new Date()));
 $("n-coins").oninput=()=>{notes.coins=num($("n-coins").value);calcNotes();saveNotes();};
 $("n-coins").onblur=()=>{const v=num($("n-coins").value);$("n-coins").value=v?nf.format(v):"";};
 $("n-take").onclick=()=>{
+  if(isLocked(cur)){alert("Der Tag ist abgeschlossen.");return;}
   ensure(cur).barIst=notesSum();markDirty(cur);
   show("tag");renderTag();window.scrollTo(0,0);
 };
