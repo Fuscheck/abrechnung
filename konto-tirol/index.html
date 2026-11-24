@@ -95,6 +95,19 @@ tr.clk{cursor:pointer}
 tr.clk:active{background:var(--card2)}
 tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
 .hide{display:none}
+.startlogo{text-align:center;margin:10px 0 18px}
+.startlogo img{width:min(62vw,230px)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{position:relative;background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:20px 12px 16px;text-align:center;cursor:pointer;color:var(--txt);font:inherit}
+.tile:active{background:var(--card2)}
+.tile i{display:block;font-size:30px;font-style:normal;margin-bottom:8px}
+.tile b{display:block;font-size:15px;font-weight:650;margin-bottom:3px}
+.tile span{display:block;font-size:12px;color:var(--dim)}
+.tile .dot{top:12px;right:12px}
+.dpslot{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.dpslot h3{margin:0 0 8px;font-size:14px}
+.dpslot img{width:100%;border-radius:10px}
 nav button{position:relative}
 .dot{position:absolute;top:7px;right:calc(50% - 18px);width:8px;height:8px;border-radius:50%;background:var(--bad);display:block}
 .infoitem{display:flex;gap:10px;align-items:flex-start;padding:11px 2px;border-bottom:1px solid var(--line);cursor:pointer}
@@ -129,7 +142,39 @@ nav button{position:relative}
 <div class="wrap">
 
   <!-- ============ TAG ============ -->
-  <section id="v-tag">
+  <section id="v-start" class="hide">
+    <div class="startlogo"><img src="logo.png" alt=""></div>
+    <div class="tiles">
+      <button class="tile" data-go="tag"><i>📋</i><b>Abrechnung</b><span id="t-abr">–</span></button>
+      <button class="tile" data-go="anleitung"><i>📘</i><b>Anleitung</b><span id="t-anl">–</span></button>
+      <button class="tile" data-go="ablaeufe"><i>🗒</i><b>Abläufe</b><span id="t-abl">–</span></button>
+      <button class="tile" data-go="dienstplan"><i>📅</i><b>Dienstplan</b><span id="t-dp">–</span></button>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="startMehr" style="flex:1">Einstellungen</button>
+      <button class="btn" id="startLogout" style="flex:1">Abmelden</button>
+    </div>
+  </section>
+
+  <section id="v-anleitung" class="hide">
+    <h1>Anleitung</h1>
+    <div class="card"><div id="list-anleitung"></div><div class="note" id="empty-anleitung"></div></div>
+    <button class="btn acc hide adminonly" data-new="anleitung" style="width:100%">+ Neue Anleitung</button>
+  </section>
+
+  <section id="v-ablaeufe" class="hide">
+    <h1>Abläufe</h1>
+    <div class="card"><div id="list-plan"></div><div class="note" id="empty-plan"></div></div>
+    <button class="btn acc hide adminonly" data-new="plan" style="width:100%">+ Neuer Ablauf</button>
+  </section>
+
+  <section id="v-dienstplan" class="hide">
+    <h1>Dienstplan</h1>
+    <div id="dpSlots"></div>
+    <div class="card"><div id="list-checkliste"></div><div class="note" id="empty-checkliste"></div></div>
+  </section>
+
+  <section id="v-tag" class="hide">
     <div id="dayHead">
     <div class="datenav">
       <button class="btn" id="dPrev">‹</button>
@@ -268,14 +313,8 @@ nav button{position:relative}
     </div>
   </section>
 
-  <section id="v-info" class="hide">
-    <h1>Info</h1>
-    <div class="card" id="infoCard">
-      <div id="infoList"></div>
-      <div class="note" id="infoEmpty"></div>
-    </div>
-    <button class="btn acc hide" id="infoNew" style="width:100%;margin-bottom:10px">+ Neuer Eintrag</button>
-    <div class="card hide" id="infoForm">
+  <section id="v-form" class="hide">
+    <div class="card" id="infoForm">
       <h2 id="infoFormTitle">Neuer Eintrag</h2>
       <div class="fld"><label>Art</label>
         <select id="if-kind">
@@ -296,6 +335,7 @@ nav button{position:relative}
       <button class="btn ghost hide" id="if-del" style="width:100%;margin-top:8px;color:var(--bad)">Eintrag löschen</button>
       <div class="pwmsg" id="if-msg"></div>
     </div>
+  
   </section>
 
   <section id="v-mehr" class="hide">
@@ -353,13 +393,12 @@ nav button{position:relative}
 <div id="infoView" class="hide"></div>
 
 <nav>
-  <button data-v="tag" class="on"><i>📋</i>Tag</button>
-  <button data-v="scheine"><i>💶</i>Scheine</button>
-  <button data-v="bericht"><i>🧾</i>Bericht</button>
-  <button data-v="saison"><i>📊</i>Saison</button>
-  <button data-v="info"><i>📘</i>Info<em class="dot hide" id="infoDot"></em></button>
+  <button id="navStart"><i>🏠</i>Start</button>
+  <button data-v="tag" data-grp="abr" class="on"><i>📋</i>Tag</button>
+  <button data-v="scheine" data-grp="abr"><i>💶</i>Scheine</button>
+  <button data-v="bericht" data-grp="abr"><i>🧾</i>Bericht</button>
+  <button data-v="saison" data-grp="abr"><i>📊</i>Saison</button>
   <button data-v="mehr"><i>⚙️</i>Mehr</button>
-  <button id="navLock"><i>🔒</i>Abmelden</button>
 </nav>
 
 <script>
@@ -416,7 +455,7 @@ function hasData(r){return !!((+r.abrechnung)||(r.cards||[]).length||(r.gutschei
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-24 01:25";
+const APP_VERSION="2026-11-24 01:45";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -488,7 +527,8 @@ async function startSession(session){
   $("acc-mail").textContent=session.user.email||"–";
   setSync("lade …");
   try{await pullAll();}catch(e){setSync("offline – lokale Daten");}
-  loadInfos();
+  await loadInfos();
+  show("start");
   flush();
 }
 async function logout(){
@@ -731,9 +771,72 @@ async function loadInfos(){
     renderInfo();updateDot();
   }catch(e){}
 }
+function renderStart(){
+  const c=k=>infos.filter(i=>i.kind===k).length;
+  const nu=k=>infos.filter(i=>i.kind===k&&isNew(i)).length;
+  const lab=(k,el)=>{
+    const n=c(k),x=nu(k);
+    $(el).textContent=n?(n+(n===1?" Eintrag":" Einträge")+(x?" · "+x+" neu":"")):"leer";
+    const t=$(el).closest(".tile");
+    let d=t.querySelector(".dot");
+    if(x&&!d){d=document.createElement("em");d.className="dot";t.appendChild(d);}
+    if(!x&&d)d.remove();
+  };
+  lab("anleitung","t-anl");lab("plan","t-abl");lab("dienstplan","t-dp");
+  const keys=Object.keys(days).filter(k=>hasData(days[k]));
+  $("t-abr").textContent=keys.length?keys.length+" Tage erfasst":"noch leer";
+  document.querySelectorAll(".adminonly").forEach(b=>b.classList.toggle("hide",!isAdmin));
+}
+function renderList2(kind){
+  const box=$("list-"+(kind==="plan"?"plan":kind));if(!box)return;
+  box.innerHTML="";
+  const list=infos.filter(i=>i.kind===kind);
+  list.forEach(it=>box.appendChild(infoRow(it)));
+  const e=$("empty-"+(kind==="plan"?"plan":kind));if(e)e.textContent=list.length?"":"Noch keine Einträge.";
+  document.querySelectorAll(".adminonly").forEach(b=>b.classList.toggle("hide",!isAdmin));
+}
+function infoRow(it){
+  const k=it.kind,d=document.createElement("div");d.className="infoitem";
+  const date=new Date(it.updated_at).toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"});
+  d.innerHTML="<div class='ic'>"+((KINDS[k]||["",""])[1])+"</div><div class='tt2'><b></b><span>"+date+"</span></div>";
+  d.querySelector("b").textContent=it.title;
+  if(isNew(it)){const n=document.createElement("em");n.className="neu";n.textContent="NEU";d.querySelector("b").appendChild(n);}
+  d.onclick=()=>openInfo(it);
+  return d;
+}
+const DP_SLOTS=["Diese Woche","Nächste Woche"];
+function renderDienstplan(){
+  const box=$("dpSlots");box.innerHTML="";
+  DP_SLOTS.forEach(slot=>{
+    const it=infos.find(i=>i.kind==="dienstplan"&&i.title===slot);
+    const c=document.createElement("div");c.className="dpslot";
+    const h=document.createElement("h3");h.textContent=slot;c.appendChild(h);
+    if(it){
+      const b=document.createElement("button");b.className="btn";b.style.width="100%";
+      b.textContent=(it.file_type==="pdf"?"PDF öffnen":"Plan ansehen")+(isNew(it)?" · NEU":"");
+      b.onclick=()=>openInfo(it);c.appendChild(b);
+      const m=document.createElement("div");m.className="note";
+      m.textContent="geändert "+new Date(it.updated_at).toLocaleString("de-AT",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+      c.appendChild(m);
+    }else{
+      const m=document.createElement("div");m.className="note";m.textContent="Noch nicht hochgeladen.";c.appendChild(m);
+    }
+    if(isAdmin){
+      const u=document.createElement("button");u.className="btn acc";u.style.cssText="width:100%;margin-top:8px";
+      u.textContent=it?"Ersetzen":"Hochladen";
+      u.onclick=()=>{openForm(it||null);$("if-kind").value="dienstplan";$("if-title").value=slot;};
+      c.appendChild(u);
+    }
+    box.appendChild(c);
+  });
+  const other=infos.filter(i=>i.kind==="dienstplan"&&DP_SLOTS.indexOf(i.title)<0);
+  const lb=$("list-checkliste");lb.innerHTML="";
+  other.forEach(it=>lb.appendChild(infoRow(it)));
+  $("empty-checkliste").textContent=other.length?"":"";
+}
 function renderInfo(){
   const box=$("infoList");box.innerHTML="";
-  $("infoNew").classList.toggle("hide",!isAdmin);
+  
   Object.keys(KINDS).forEach(k=>{
     const list=infos.filter(i=>i.kind===k);
     if(!list.length)return;
@@ -804,7 +907,7 @@ async function openInfo(it){
 }
 function openForm(it){
   editId=it?it.id:null;
-  $("infoForm").classList.remove("hide");
+  show("form");
   $("infoFormTitle").textContent=it?"Eintrag bearbeiten":"Neuer Eintrag";
   $("if-kind").value=it?it.kind:"anleitung";
   $("if-title").value=it?it.title:"";
@@ -812,7 +915,7 @@ function openForm(it){
   $("if-current").textContent=it&&it.file_path?("Datei: "+it.file_path):"";
   $("if-del").classList.toggle("hide",!it);
   $("if-msg").textContent="";
-  $("infoForm").scrollIntoView({block:"start"});
+  window.scrollTo(0,0);
 }
 async function saveInfo(){
   const msg=$("if-msg");
@@ -831,8 +934,9 @@ async function saveInfo(){
     }
     if(editId){const{error}=await sb.from("infos").update(row).eq("id",editId);if(error)throw error;}
     else{const{error}=await sb.from("infos").insert(row);if(error)throw error;}
-    $("if-file").value="";$("infoForm").classList.add("hide");
+    $("if-file").value="";
     await loadInfos();
+    show(row.kind==="dienstplan"?"dienstplan":(row.kind==="plan"?"ablaeufe":"anleitung"));
   }catch(e){msg.className="pwmsg err";msg.textContent="Fehler: "+(e.message||e);}
 }
 async function delInfo(){
@@ -841,13 +945,14 @@ async function delInfo(){
   try{
     const{error}=await sb.from("infos").delete().eq("id",editId);
     if(error)throw error;
-    $("infoForm").classList.add("hide");await loadInfos();
+    await loadInfos();show("start");
   }catch(e){$("if-msg").className="pwmsg err";$("if-msg").textContent="Fehler: "+(e.message||e);}
 }
 
 /* ---------- Navigation ---------- */
+const ABR=["tag","saison","bericht","scheine"];
 function show(v){
-  ["tag","saison","bericht","scheine","info","mehr"].forEach(x=>{
+  ["start","tag","saison","bericht","scheine","anleitung","ablaeufe","dienstplan","form","mehr"].forEach(x=>{
     $("v-"+x).classList.toggle("hide",x!==v);
   });
   document.querySelectorAll("nav button[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
@@ -855,7 +960,14 @@ function show(v){
   if(v==="bericht")renderBericht();
   if(v==="scheine")renderNotes();
   if(v==="mehr")renderSettings();
-  if(v==="info")renderInfo();
+  const inAbr=ABR.indexOf(v)>=0;
+  document.querySelectorAll('nav button[data-grp="abr"]').forEach(b=>b.classList.toggle("hide",!inAbr));
+  document.querySelectorAll("nav").forEach(n=>n.classList.toggle("hide",v==="start"));
+  document.body.style.paddingBottom = v==="start" ? "24px" : "";
+  if(v==="start")renderStart();
+  if(v==="anleitung")renderList2("anleitung");
+  if(v==="ablaeufe")renderList2("plan");
+  if(v==="dienstplan")renderDienstplan();
 }
 function renderAll(){renderTag();if(!$("v-saison").classList.contains("hide"))renderSaison();
   if(!$("v-bericht").classList.contains("hide"))renderBericht();
@@ -881,8 +993,8 @@ function bindSettings(){
   upd("set-name","name");upd("set-slabel","slabel");
   upd("set-sstart","sstart");upd("set-send","send");
   $("pw-save").onclick=changePw;
-  $("infoNew").onclick=()=>openForm(null);
-  $("if-cancel").onclick=()=>{$("infoForm").classList.add("hide");};
+  
+  $("if-cancel").onclick=()=>show("start");
   $("if-save").onclick=saveInfo;
   $("if-del").onclick=delInfo;
   $("navLock").onclick=()=>logout();
@@ -904,7 +1016,7 @@ function showLogin(){
   $("lk-label").textContent="Anmelden";
   $("acc-mail").textContent="–";
   setSync("");
-  show("tag");renderAll();
+  show("start");renderAll();
   window.scrollTo(0,0);
 }
 async function initAuth(){
@@ -960,6 +1072,11 @@ $("dNext").onclick=()=>{cur=addDays(cur,1);renderTag();};
 $("dToday").onclick=()=>{cur=iso(new Date());renderTag();};
 $("dPick").onchange=e=>{if(e.target.value){cur=e.target.value;renderTag();}};
 document.querySelectorAll("nav button[data-v]").forEach(b=>b.onclick=()=>show(b.dataset.v));
+document.querySelectorAll(".tile").forEach(b=>b.onclick=()=>{show(b.dataset.go);window.scrollTo(0,0);});
+document.querySelectorAll("[data-new]").forEach(b=>b.onclick=()=>{openForm(null);$("if-kind").value=b.dataset.new;});
+$("navStart").onclick=()=>{show("start");window.scrollTo(0,0);};
+$("startMehr").onclick=()=>show("mehr");
+$("startLogout").onclick=()=>logout();
 $("b-woche").onclick=()=>{const d=parseISO(iso(new Date()));const wd=(d.getDay()+6)%7;
   $("b-von").value=addDays(iso(d),-wd);$("b-bis").value=addDays(iso(d),6-wd);renderBericht();};
 $("b-monat").onclick=()=>{const d=new Date();
