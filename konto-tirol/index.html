@@ -162,6 +162,13 @@ tr.lk td:first-child::after{content:" 🔒";font-size:10px}
 .t-abl{--tint:#3fb950;--glow:rgba(63,185,80,.12)}
 .t-anl{--tint:#b07cf0;--glow:rgba(176,124,240,.12)}
 .tile .ic{background:color-mix(in srgb, var(--tint) 16%, transparent);color:var(--tint)}
+.tile .ic .sld{fill:var(--icf,var(--tint))}
+.tile .ic .gst{fill:var(--icf,var(--tint));opacity:.35}
+html[data-icons="a"] .tile .ic{background:none;border:none;border-radius:0;width:36px;height:36px;place-items:center start}
+html[data-icons="a"] .tile .ic svg{width:31px;height:31px}
+html[data-icons="b"] .tile .ic{--icf:var(--card);background:var(--tint);border-radius:13px;box-shadow:0 5px 16px -7px var(--tint)}
+html[data-icons="c"] .tile .ic{border-radius:14px;border:1px solid color-mix(in srgb, var(--tint) 26%, transparent);
+  background:linear-gradient(145deg, color-mix(in srgb, var(--tint) 30%, transparent), color-mix(in srgb, var(--tint) 10%, transparent))}
 .badge{position:absolute;top:12px;right:12px;background:var(--bad);color:#fff;font-size:10px;
   font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:999px;z-index:2}
 .dpslot{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
@@ -217,22 +224,22 @@ nav button{position:relative}
     <div class="hello"><b id="helloTxt">Guten Tag</b><span id="helloDate"></span></div>
     <div class="tiles">
       <button class="tile t-abr" data-go="tag">
-        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5.6 3.4h12.8v17.2l-2.6-1.7-2.5 1.7-2.5-1.7-2.6 1.7z"/><path d="M14.8 9.6a3.1 3.1 0 1 0 0 5.2"/><path d="M8.8 11.1h4.6M8.8 13.4h4.6"/></svg></span>
+        <span class="ic"><svg viewBox="0 0 32 32"><rect class="gst" x="2.4" y="6.6" width="22" height="14" rx="3.4"/><rect class="gst" x="7.4" y="10.6" width="10" height="2.3" rx="1.15"/><rect class="gst" x="7.4" y="14.8" width="6.4" height="2.3" rx="1.15"/><circle class="sld" cx="22.2" cy="20.4" r="7.6"/></svg></span>
         <b>Abrechnung</b><span class="sb" id="t-abr">–</span>
         <span class="go">›</span>
       </button>
       <button class="tile t-dp" data-go="dienstplan">
-        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.2" y="4.8" width="17.6" height="16" rx="2.8"/><path d="M3.2 9.8h17.6M7.8 2.9v3.8M16.2 2.9v3.8"/><circle cx="12" cy="15.3" r="3.1"/><path d="M12 13.7v1.8l1.3.8"/></svg></span>
+        <span class="ic"><svg viewBox="0 0 32 32"><rect class="gst" x="3.4" y="5.4" width="25.2" height="23.2" rx="5"/><path class="sld" d="M3.4 10.4a5 5 0 0 1 5-5h15.2a5 5 0 0 1 5 5v2.6H3.4z"/><rect class="sld" x="8.6" y="2.2" width="3.2" height="6.4" rx="1.6"/><rect class="sld" x="20.2" y="2.2" width="3.2" height="6.4" rx="1.6"/><circle class="sld" cx="16" cy="20.6" r="4.8"/></svg></span>
         <b>Dienstplan</b><span class="sb" id="t-dp">–</span>
         <span class="go">›</span>
       </button>
       <button class="tile t-abl" data-go="ablaeufe">
-        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.8" y="3.4" width="7.6" height="5.4" rx="1.8"/><rect x="13.6" y="15.2" width="7.6" height="5.4" rx="1.8"/><path d="M6.6 8.8v6.2a2.4 2.4 0 0 0 2.4 2.4h2.2"/><path d="M11.2 15.6l2.4 2.3-2.4 2.3"/></svg></span>
+        <span class="ic"><svg viewBox="0 0 32 32"><circle class="sld" cx="6.6" cy="7.4" r="4.3"/><circle class="sld" cx="6.6" cy="16" r="4.3"/><circle class="sld" cx="6.6" cy="24.6" r="4.3"/><rect class="gst" x="13.6" y="5.2" width="15.6" height="4.4" rx="2.2"/><rect class="gst" x="13.6" y="13.8" width="15.6" height="4.4" rx="2.2"/><rect class="gst" x="13.6" y="22.4" width="11" height="4.4" rx="2.2"/></svg></span>
         <b>Abläufe</b><span class="sb" id="t-abl">–</span>
         <span class="go">›</span>
       </button>
       <button class="tile t-anl" data-go="anleitung">
-        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.8C10.3 5.2 8.1 4.5 4.4 4.5v12.3c3.7 0 5.9.7 7.6 2.3 1.7-1.6 3.9-2.3 7.6-2.3V4.5c-3.7 0-5.9.7-7.6 2.3z"/><path d="M12 6.8v12.3"/></svg></span>
+        <span class="ic"><svg viewBox="0 0 32 32"><path class="gst" d="M15.1 9.3C12.9 6.9 9.7 5.9 4.5 5.9c-1 0-1.8.8-1.8 1.8v15.6c0 1 .8 1.8 1.8 1.8 5.2 0 8.4 1 10.6 3.4z"/><path class="sld" d="M16.9 9.3c2.2-2.4 5.4-3.4 10.6-3.4 1 0 1.8.8 1.8 1.8v15.6c0 1-.8 1.8-1.8 1.8-5.2 0-8.4 1-10.6 3.4z"/></svg></span>
         <b>Anleitung</b><span class="sb" id="t-anl">–</span>
         <span class="go">›</span>
       </button>
@@ -475,7 +482,10 @@ nav button{position:relative}
     <h1>Einstellungen</h1>
     <div class="card">
       <h2>Design</h2>
+      <label>Farben</label>
       <div id="themeChips"></div>
+      <label style="margin-top:10px">Symbole</label>
+      <div id="iconChips"></div>
     </div>
     <div class="card">
       <h2>Betrieb</h2>
@@ -598,7 +608,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-26 17:05";
+const APP_VERSION="2026-11-26 17:40";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -1296,6 +1306,25 @@ const THEMES=[{id:"dark",name:"Standard",sw:"#4493f8"},{id:"rose",name:"Rosé he
   {id:"plum",name:"Plum dunkel",sw:"#E07BB8"},{id:"blau",name:"Blau hell",sw:"#2F72D8"}];
 const TMC={dark:"#0d1117",rose:"#FFF6F8",plum:"#17111E",blau:"#F1F6FD"};
 const THKEY=LS+":theme";
+const ICONSETS=[{id:"b",name:"Vollfläche"},{id:"c",name:"Getönt"},{id:"a",name:"Frei"}];
+const ICKEY=LS+":icons";
+function savedIcons(){try{const v=localStorage.getItem(ICKEY);return ICONSETS.some(x=>x.id===v)?v:"b"}catch(e){return "b"}}
+function applyIcons(v){
+  if(!ICONSETS.some(x=>x.id===v))v="b";
+  document.documentElement.dataset.icons=v;
+  try{localStorage.setItem(ICKEY,v);}catch(e){}
+}
+function renderIconChips(){
+  const w=$("iconChips");if(!w)return;w.innerHTML="";
+  const act=document.documentElement.dataset.icons||"b";
+  ICONSETS.forEach(t=>{
+    const b=document.createElement("button");b.type="button";
+    b.className="themechip"+(act===t.id?" on":"");
+    b.textContent=t.name;
+    b.onclick=()=>{applyIcons(t.id);renderIconChips();};
+    w.appendChild(b);
+  });
+}
 function savedTheme(){try{return localStorage.getItem(THKEY)||"dark"}catch(e){return "dark"}}
 function applyTheme(t){
   if(!THEMES.some(x=>x.id===t))t="dark";
@@ -1320,6 +1349,7 @@ function renderThemes(){
 }
 function applyCfg(){
   applyTheme(cfg.theme||savedTheme());
+  applyIcons(savedIcons());
   $("splashLogo").src="logo.png";
   $("splashName").textContent=cfg.name||"";
 }
@@ -1330,7 +1360,7 @@ function renderSettings(){
   $("set-send").value=cfg.send||"";
   $("verline").textContent="Version "+APP_VERSION;
   $("set-count").textContent=Object.keys(days).filter(k=>hasData(days[k])).length;
-  applyCfg();renderThemes();
+  applyCfg();renderThemes();renderIconChips();
 }
 function bindSettings(){
   const upd=(id,key)=>{$(id).onchange=()=>{cfg[key]=$(id).value;saveLocal();applyCfg();
