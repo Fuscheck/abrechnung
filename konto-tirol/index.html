@@ -598,7 +598,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-26 16:45";
+const APP_VERSION="2026-11-26 17:05";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -1295,9 +1295,12 @@ function renderAll(){renderTag();if(!$("v-saison").classList.contains("hide"))re
 const THEMES=[{id:"dark",name:"Standard",sw:"#4493f8"},{id:"rose",name:"Rosé hell",sw:"#E0689A"},
   {id:"plum",name:"Plum dunkel",sw:"#E07BB8"},{id:"blau",name:"Blau hell",sw:"#2F72D8"}];
 const TMC={dark:"#0d1117",rose:"#FFF6F8",plum:"#17111E",blau:"#F1F6FD"};
+const THKEY=LS+":theme";
+function savedTheme(){try{return localStorage.getItem(THKEY)||"dark"}catch(e){return "dark"}}
 function applyTheme(t){
   if(!THEMES.some(x=>x.id===t))t="dark";
   cfg.theme=t;
+  try{localStorage.setItem(THKEY,t);}catch(e){}
   if(t==="dark")delete document.documentElement.dataset.theme;
   else document.documentElement.dataset.theme=t;
   const m=document.querySelector('meta[name=theme-color]');if(m)m.content=TMC[t]||TMC.dark;
@@ -1316,7 +1319,7 @@ function renderThemes(){
   });
 }
 function applyCfg(){
-  applyTheme(cfg.theme||"dark");
+  applyTheme(cfg.theme||savedTheme());
   $("splashLogo").src="logo.png";
   $("splashName").textContent=cfg.name||"";
 }
