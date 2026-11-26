@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0d1117">
@@ -11,12 +11,30 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+html{-webkit-text-size-adjust:100%}
 :root{
   --bg:#0d1117;--card:#161b22;--card2:#1c232c;--line:#2a323d;
   --txt:#e6edf3;--dim:#8b949e;--acc:#4493f8;--ok:#3fb950;--warn:#d29922;--bad:#f85149;
+  --bgt:rgba(13,17,23,.94);--accs:rgba(68,147,248,.18);--onacc:#fff;
   --r:14px;
 }
+html[data-theme="rose"]{
+  --bg:#FFF6F8;--card:#ffffff;--card2:#FDF0F4;--line:#F2D5E1;
+  --txt:#3A2A33;--dim:#A8718C;--acc:#E0689A;--ok:#2F9E68;--warn:#BE8318;--bad:#DC4A66;
+  --bgt:rgba(255,246,248,.94);--accs:rgba(224,104,154,.16);--onacc:#fff;
+}
+html[data-theme="plum"]{
+  --bg:#17111E;--card:#221A2B;--card2:#1C1524;--line:#352940;
+  --txt:#EFE6F2;--dim:#A98FB8;--acc:#E07BB8;--ok:#5FD08A;--warn:#E0B44A;--bad:#FF7A8F;
+  --bgt:rgba(23,17,30,.94);--accs:rgba(224,123,184,.18);--onacc:#20121c;
+}
+html[data-theme="blau"]{
+  --bg:#F1F6FD;--card:#ffffff;--card2:#E8F0FB;--line:#D2E0F2;
+  --txt:#1B2B40;--dim:#6681A3;--acc:#2F72D8;--ok:#1E8E5A;--warn:#B57A12;--bad:#D6415C;
+  --bgt:rgba(241,246,253,.94);--accs:rgba(47,114,216,.14);--onacc:#fff;
+}
+html[data-theme="rose"] .card,html[data-theme="blau"] .card{box-shadow:0 2px 12px rgba(40,20,45,.06)}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
   font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 body{padding-bottom:calc(68px + env(safe-area-inset-bottom))}
@@ -46,17 +64,24 @@ input[type=date]{min-height:44px}
 .fld{margin-bottom:11px}
 .fld:last-child{margin-bottom:0}
 .btn{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-weight:600;cursor:pointer}
-.btn.acc{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.acc{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
 .btn.ghost{background:transparent}
 .btn:active{opacity:.6}
 #dayHead{position:sticky;top:calc(env(safe-area-inset-top));z-index:15;
-  background:rgba(13,17,23,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  background:var(--bgt);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
   border-bottom:1px solid var(--line);margin:0 -12px 12px;padding:8px 12px 10px}
 .datenav{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.datenav .btn{padding:11px 15px;font-size:19px;line-height:1}
+.datenav{gap:10px}
+.datenav .btn.arrow{flex:0 0 56px;padding:13px 0;font-size:28px;line-height:1;font-weight:600}
+.dsum{display:flex;gap:8px;margin-bottom:10px}
+.dsum div{flex:1;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:7px 9px;text-align:center}
+.dsum span{display:block;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-bottom:2px}
+.dsum b{font-size:15px;font-variant-numeric:tabular-nums}
+#dcal{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:10px}
+.cald.lk::before{content:"🔒";position:absolute;top:2px;right:3px;font-size:8px}
 .dlabel{flex:1;text-align:center}
-.dlabel b{display:block;font-size:17px}
-.dlabel span{font-size:12px;color:var(--dim)}
+.dlabel b{display:block;font-size:21px;font-weight:700}
+.dlabel span{font-size:13px;color:var(--dim)}
 .cards-list{display:flex;flex-direction:column;gap:7px;margin-bottom:9px}
 .cardrow{display:flex;gap:7px;align-items:center}
 .cardrow .idx{width:26px;flex:0 0 26px;font-size:12px;color:var(--dim);text-align:right}
@@ -80,11 +105,13 @@ input[type=date]{min-height:44px}
 .lklabel.ok{color:var(--ok)}
 #splash .ini{margin-top:12px;font-size:13px;letter-spacing:.12em;color:#9c3520;font-weight:700}
 .locked{overflow:hidden}
-nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:rgba(13,17,23,.93);
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--bgt);
   backdrop-filter:blur(12px);border-top:1px solid var(--line);
   padding-bottom:env(safe-area-inset-bottom);z-index:20}
 nav button{flex:1;background:none;border:none;padding:11px 2px 9px;color:var(--dim);font-size:11px;cursor:pointer}
-nav button i{display:block;font-size:19px;font-style:normal;margin-bottom:2px}
+nav button i{display:block;margin:0 auto 3px;width:23px;height:23px}
+nav button i svg{width:23px;height:23px;display:block;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+nav button.on i svg{stroke-width:2.1}
 nav button{font-size:10px}
 nav button.on{color:var(--acc)}
 table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
@@ -105,9 +132,9 @@ tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--line)}
   border-radius:9px;font-size:14px;cursor:pointer;background:transparent;border:none;color:var(--txt);font:inherit}
 .cald.off{color:var(--line);pointer-events:none}
 .cald.has::after{content:"";position:absolute;bottom:5px;width:4px;height:4px;border-radius:50%;background:var(--acc)}
-.cald.inr{background:rgba(68,147,248,.16);border-radius:0}
-.cald.end{background:var(--acc);color:#fff;font-weight:650;border-radius:9px}
-.cald.end.has::after{background:#fff}
+.cald.inr{background:var(--accs);border-radius:0}
+.cald.end{background:var(--acc);color:var(--onacc);font-weight:650;border-radius:9px}
+.cald.end.has::after{background:var(--onacc)}
 .cald.today{outline:1px solid var(--line)}
 .locked-day input,.locked-day textarea,.locked-day select{opacity:.55}
 .lockmark{font-size:13px;color:var(--warn);margin-left:6px}
@@ -156,7 +183,7 @@ nav button{position:relative}
 #infoView.page iframe{width:100%;height:calc(100vh - 58px - env(safe-area-inset-bottom));
   border:none;border-radius:0;display:block}
 #backbar{position:fixed;left:0;right:0;bottom:0;z-index:45;display:flex;
-  background:rgba(13,17,23,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  background:var(--bgt);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
   border-top:1px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
 #backbar button{flex:1;background:var(--card);border:1px solid var(--line);border-radius:10px;
   color:var(--txt);font:inherit;font-size:15px;font-weight:600;padding:11px;cursor:pointer}
@@ -171,9 +198,12 @@ nav button{position:relative}
 .chk.on span{text-decoration:line-through;color:var(--dim)}
 .chk span{font-size:15px}
 .sync{font-size:11px;color:var(--dim);text-align:center;padding:6px 0 0}
+.themechip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card2);color:var(--txt);border-radius:999px;padding:8px 13px;font-size:13px;font-weight:600;margin:0 7px 7px 0;cursor:pointer;font-family:inherit}
+.themechip.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
+.themechip em{width:14px;height:14px;border-radius:50%;display:block;border:1px solid rgba(128,128,128,.35)}
 .chip{display:inline-block;background:var(--card2);border:1px solid var(--line);border-radius:999px;
   padding:5px 11px;font-size:13px;margin:0 6px 6px 0;cursor:pointer}
-.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.chip.on{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
 .sum{font-variant-numeric:tabular-nums}
 .note{font-size:12px;color:var(--dim);margin-top:8px}
 </style>
@@ -234,13 +264,25 @@ nav button{position:relative}
   <section id="v-tag" class="hide">
     <div id="dayHead">
     <div class="datenav">
-      <button class="btn" id="dPrev">‹</button>
+      <button class="btn arrow" id="dPrev" aria-label="Vorheriger Tag">‹</button>
       <div class="dlabel"><b id="dName">–</b><span id="dDate">–</span></div>
-      <button class="btn" id="dNext">›</button>
+      <button class="btn arrow" id="dNext" aria-label="Nächster Tag">›</button>
     </div>
+    <div class="dsum" id="dSum"></div>
     <div class="row" style="margin-bottom:10px">
       <button class="btn ghost" id="dToday" style="flex:1">Heute</button>
-      <input type="date" id="dPick" style="flex:1.4">
+      <button class="btn" id="dOpenCal" style="flex:1.4">Kalender</button>
+    </div>
+    <div id="dcal" class="hide">
+      <div class="calhead">
+        <button class="btn" id="dcalPrev">‹</button>
+        <b id="dcalTitle"></b>
+        <button class="btn" id="dcalNext">›</button>
+      </div>
+      <div class="caldow" id="dcalDow"></div>
+      <div class="calgrid" id="dcalGrid"></div>
+      <div class="note" id="dcalInfo" style="text-align:center">Punkt = schon ausgefüllt · 🔒 = abgeschlossen</div>
+      <button class="btn" id="dcalClose" style="width:100%;margin-top:8px">Schließen</button>
     </div>
     </div>
 
@@ -432,6 +474,10 @@ nav button{position:relative}
   <section id="v-mehr" class="hide">
     <h1>Einstellungen</h1>
     <div class="card">
+      <h2>Design</h2>
+      <div id="themeChips"></div>
+    </div>
+    <div class="card">
       <h2>Betrieb</h2>
       <div class="fld"><label>Name</label><input type="text" id="set-name" placeholder="z.B. Kiwi Gin Bar"></div>
     </div>
@@ -484,11 +530,11 @@ nav button{position:relative}
 <div id="infoView" class="hide"></div>
 
 <nav>
-  <button id="navStart"><i>🏠</i>Start</button>
-  <button data-v="tag" data-grp="abr" class="on"><i>📋</i>Tag</button>
-  <button data-v="bericht" data-grp="abr"><i>🧾</i>Bericht</button>
-  <button data-v="saison" data-grp="abr"><i>📊</i>Saison</button>
-  <button data-v="mehr"><i>⚙️</i>Mehr</button>
+  <button id="navStart"><i><svg viewBox="0 0 24 24"><path d="M3.6 10.6 12 3.8l8.4 6.8V20a1 1 0 0 1-1 1h-4.6v-6.2H9.2V21H4.6a1 1 0 0 1-1-1z"/></svg></i>Start</button>
+  <button data-v="tag" data-grp="abr" class="on"><i><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M8 2.6v3.6M16 2.6v3.6M3.5 9.6h17"/></svg></i>Tag</button>
+  <button data-v="bericht" data-grp="abr"><i><svg viewBox="0 0 24 24"><path d="M6 3.2h8.5L19 7.7V20a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.2a1 1 0 0 1 1-1z"/><path d="M14 3.4v4.4h4.6M8.4 12.6h7.2M8.4 16.3h5"/></svg></i>Bericht</button>
+  <button data-v="saison" data-grp="abr"><i><svg viewBox="0 0 24 24"><path d="M4 20V11M10 20V5M16 20v-7M22 20H2"/></svg></i>Saison</button>
+  <button data-v="mehr"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.1"/><path d="M19.3 14.5a1.6 1.6 0 0 0 .32 1.76l.06.06a1.9 1.9 0 1 1-2.7 2.7l-.05-.06a1.6 1.6 0 0 0-1.77-.32 1.6 1.6 0 0 0-.97 1.46v.17a1.9 1.9 0 1 1-3.8 0v-.09a1.6 1.6 0 0 0-1.04-1.46 1.6 1.6 0 0 0-1.77.32l-.06.06a1.9 1.9 0 1 1-2.7-2.7l.07-.06a1.6 1.6 0 0 0 .32-1.77 1.6 1.6 0 0 0-1.46-.97h-.17a1.9 1.9 0 1 1 0-3.8h.09A1.6 1.6 0 0 0 5.1 8.8a1.6 1.6 0 0 0-.32-1.77l-.06-.05a1.9 1.9 0 1 1 2.7-2.7l.05.06a1.6 1.6 0 0 0 1.77.32h.08a1.6 1.6 0 0 0 .97-1.46v-.17a1.9 1.9 0 0 1 3.8 0v.09a1.6 1.6 0 0 0 .97 1.46 1.6 1.6 0 0 0 1.77-.32l.05-.06a1.9 1.9 0 1 1 2.7 2.7l-.06.05a1.6 1.6 0 0 0-.32 1.77v.08a1.6 1.6 0 0 0 1.46.97h.17a1.9 1.9 0 0 1 0 3.8h-.09a1.6 1.6 0 0 0-1.46.97z"/></svg></i>Mehr</button>
 </nav>
 
 <script>
@@ -552,7 +598,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-25 00:30";
+const APP_VERSION="2026-11-26 16:00";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -680,7 +726,7 @@ function renderTag(){
   $("dName").textContent=dayLabel(cur);
   if(isLocked(cur)){const l=document.createElement("em");l.className="lockmark";l.textContent="🔒";$("dName").appendChild(l);}
   $("dDate").textContent=dateLabel(cur);
-  $("dPick").value=cur;
+  closeDCal();
   const r=rec(cur);
   $("f-abrechnung").value=r.abrechnung?nf.format(r.abrechnung):"";
   $("f-barIst").value=r.barIst?nf.format(r.barIst):"";
@@ -728,6 +774,17 @@ function renderOut(){
   tg.textContent=c.hasIst?eur(c.tg):"–";
   tg.className="big "+(!c.hasIst?"":(c.tg<-0.005?"neg":c.tg>0.005?"pos":""));
   $("o-tgp").textContent=c.hasIst?pct(c.tgp):"–";
+  const ds=$("dSum");
+  if(ds){
+    const ab=(+r.abrechnung||0);
+    ds.innerHTML="";
+    const mk=(t,v,cl)=>{const d=document.createElement("div");
+      const s=document.createElement("span");s.textContent=t;
+      const b=document.createElement("b");b.textContent=v;if(cl)b.className=cl;
+      d.appendChild(s);d.appendChild(b);ds.appendChild(d);};
+    mk("Abrechnung",ab?eur(ab):"–");
+    mk("Trinkgeld",c.hasIst?eur(c.tg):"–",c.hasIst?(c.tg<-0.005?"neg":c.tg>0.005?"pos":""):"");
+  }
   $("cardCount").textContent=c.n?c.n+"×":"";
   $("gutCount").textContent=c.nG?c.nG+"×":"";
   $("recCount").textContent=c.nR?c.nR+"×":"";
@@ -797,6 +854,35 @@ function renderSaison(){
   $("sEmpty").textContent=keys.length?"":"Noch keine Einträge in dieser Saison.";
 }
 
+/* ---------- Tages-Kalender ---------- */
+let dcalM=null;
+function openDCal(){
+  dcalM=firstOfMonth(cur);
+  $("dcal").classList.remove("hide");drawDCal();
+}
+function closeDCal(){$("dcal").classList.add("hide");}
+function drawDCal(){
+  const dow=$("dcalDow");
+  if(!dow.dataset.b){dow.innerHTML="";["Mo","Di","Mi","Do","Fr","Sa","So"].forEach(t=>{
+    const e=document.createElement("span");e.textContent=t;dow.appendChild(e);});dow.dataset.b="1";}
+  const d0=parseISO(dcalM);
+  $("dcalTitle").textContent=d0.toLocaleDateString("de-AT",{month:"long",year:"numeric"});
+  const grid=$("dcalGrid");grid.innerHTML="";
+  const lead=(d0.getDay()+6)%7;
+  const dim=new Date(d0.getFullYear(),d0.getMonth()+1,0).getDate();
+  const today=iso(new Date());
+  for(let i=0;i<lead;i++){const e=document.createElement("button");e.className="cald off";e.textContent="";grid.appendChild(e);}
+  for(let n=1;n<=dim;n++){
+    const k=dcalM.slice(0,8)+String(n).padStart(2,"0");
+    const b=document.createElement("button");b.type="button";b.className="cald";b.textContent=n;
+    if(days[k]&&hasData(days[k]))b.classList.add("has");
+    if(isLocked(k))b.classList.add("lk");
+    if(k===today)b.classList.add("today");
+    if(k===cur)b.classList.add("end");
+    b.onclick=()=>{cur=k;closeDCal();renderTag();window.scrollTo(0,0);};
+    grid.appendChild(b);
+  }
+}
 /* ---------- Bericht ---------- */
 let calM=null,calA=null,calB=null;
 function firstOfMonth(k){return k.slice(0,8)+"01";}
@@ -1198,7 +1284,31 @@ function renderAll(){renderTag();if(!$("v-saison").classList.contains("hide"))re
   if(!$("v-scheine").classList.contains("hide"))renderNotes();}
 
 /* ---------- Einstellungen ---------- */
+const THEMES=[{id:"dark",name:"Standard",sw:"#4493f8"},{id:"rose",name:"Rosé hell",sw:"#E0689A"},
+  {id:"plum",name:"Plum dunkel",sw:"#E07BB8"},{id:"blau",name:"Blau hell",sw:"#2F72D8"}];
+const TMC={dark:"#0d1117",rose:"#FFF6F8",plum:"#17111E",blau:"#F1F6FD"};
+function applyTheme(t){
+  if(!THEMES.some(x=>x.id===t))t="dark";
+  cfg.theme=t;
+  if(t==="dark")delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme=t;
+  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=TMC[t]||TMC.dark;
+  const d=document.querySelector('meta[name=apple-mobile-web-app-status-bar-style]');
+  if(d)d.content=(t==="rose"||t==="blau")?"default":"black-translucent";
+}
+function renderThemes(){
+  const w=$("themeChips");if(!w)return;w.innerHTML="";
+  THEMES.forEach(t=>{
+    const b=document.createElement("button");b.type="button";
+    b.className="themechip"+((cfg.theme||"dark")===t.id?" on":"");
+    const e=document.createElement("em");e.style.background=t.sw;
+    b.appendChild(e);b.appendChild(document.createTextNode(t.name));
+    b.onclick=()=>{applyTheme(t.id);saveLocal();renderThemes();};
+    w.appendChild(b);
+  });
+}
 function applyCfg(){
+  applyTheme(cfg.theme||"dark");
   $("splashLogo").src="logo.png";
   $("splashName").textContent=cfg.name||"";
 }
@@ -1209,7 +1319,7 @@ function renderSettings(){
   $("set-send").value=cfg.send||"";
   $("verline").textContent="Version "+APP_VERSION;
   $("set-count").textContent=Object.keys(days).filter(k=>hasData(days[k])).length;
-  applyCfg();
+  applyCfg();renderThemes();
 }
 function bindSettings(){
   const upd=(id,key)=>{$(id).onchange=()=>{cfg[key]=$(id).value;saveLocal();applyCfg();
@@ -1325,7 +1435,10 @@ $("addRec").onclick=()=>addTo("rechnungen","recList","addRec");
 $("dPrev").onclick=()=>{cur=addDays(cur,-1);renderTag();};
 $("dNext").onclick=()=>{cur=addDays(cur,1);renderTag();};
 $("dToday").onclick=()=>{cur=iso(new Date());renderTag();};
-$("dPick").onchange=e=>{if(e.target.value){cur=e.target.value;renderTag();}};
+$("dOpenCal").onclick=()=>{if($("dcal").classList.contains("hide"))openDCal();else closeDCal();};
+$("dcalPrev").onclick=()=>{const d=parseISO(dcalM);d.setMonth(d.getMonth()-1);dcalM=firstOfMonth(iso(d));drawDCal();};
+$("dcalNext").onclick=()=>{const d=parseISO(dcalM);d.setMonth(d.getMonth()+1);dcalM=firstOfMonth(iso(d));drawDCal();};
+$("dcalClose").onclick=closeDCal;
 document.querySelectorAll("nav button[data-v]").forEach(b=>b.onclick=()=>show(b.dataset.v));
 document.querySelectorAll(".tile").forEach(b=>b.onclick=()=>{
   const go=b.dataset.go;
