@@ -171,6 +171,16 @@ html[data-icons="c"] .tile .ic{border-radius:14px;border:1px solid color-mix(in 
   background:linear-gradient(145deg, color-mix(in srgb, var(--tint) 30%, transparent), color-mix(in srgb, var(--tint) 10%, transparent))}
 .badge{position:absolute;top:12px;right:12px;background:var(--bad);color:#fff;font-size:10px;
   font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:999px;z-index:2}
+.dpblock{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:10px}
+.dpblock h3{display:flex;align-items:center;gap:8px;margin:0 0 9px;font-size:12px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--dim);font-weight:650}
+.dpblock h3 svg{width:19px;height:19px;fill:none;stroke:var(--acc);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.dprow{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.dprow:last-child{border-bottom:none}
+.dprow span{flex:0 0 42%;color:var(--dim)}
+.dprow b{flex:1;font-weight:600}
+.dpfrei{font-size:13px;color:var(--dim);padding:8px 2px 0}
+.dpempty{font-size:14px;color:var(--dim);padding:6px 2px}
 .dpslot{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
 .dpslot h3{margin:0 0 8px;font-size:14px}
 .dpslot img{width:100%;border-radius:10px}
@@ -264,6 +274,21 @@ nav button{position:relative}
 
   <section id="v-dienstplan" class="hide">
     <h1>Dienstplan</h1>
+    <div class="datenav" style="margin-bottom:12px">
+      <button class="btn arrow" id="dpPrev" aria-label="Vorheriger Tag">‹</button>
+      <div class="dlabel"><b id="dpName">–</b><span id="dpDate">–</span></div>
+      <button class="btn arrow" id="dpNext" aria-label="Nächster Tag">›</button>
+    </div>
+    <div id="dpTag"></div>
+    <div class="card hide" id="dpAdmin">
+      <h2>Plan einlesen</h2>
+      <div class="note" style="margin-bottom:8px">JSON aus der Dienstplan-App einfügen und speichern.</div>
+      <textarea id="dpJson" rows="5" placeholder="{&quot;tage&quot;:[ … ]}"
+        style="width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;
+               padding:10px;color:var(--txt);font:13px/1.4 ui-monospace,Menlo,monospace;resize:vertical"></textarea>
+      <button class="btn acc" id="dpSave" style="width:100%;margin-top:8px">Speichern</button>
+      <div class="note" id="dpMsg" style="text-align:center"></div>
+    </div>
     <div id="dpSlots"></div>
     <div class="card"><div id="list-checkliste"></div><div class="note" id="empty-checkliste"></div></div>
   </section>
@@ -612,7 +637,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-27 01:30";
+const APP_VERSION="2026-11-28 01:00";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -691,6 +716,7 @@ async function startSession(session){
   setSync("lade …");
   try{await pullAll();}catch(e){setSync("offline – lokale Daten");}
   await loadInfos();
+  await loadDienst();
   show("start");
   flush();
 }
@@ -1083,9 +1109,10 @@ function renderStart(){
   const cur=dp.find(i=>i.title==="Diese Woche");
   const nx=dp.find(i=>i.title==="Nächste Woche");
   const nDp=dp.filter(isNew).length;
-  setTile("t-dp", dp.length
-    ? ("KW "+kw(today)+(cur?" · aktuell da":" · fehlt")+(nx?" · nächste da":""))
-    : "Noch kein Plan", nDp);
+  const dToday=dpDays[today];
+  setTile("t-dp", dToday
+    ? ("Heute eingeteilt · KW "+kw(today))
+    : (dp.length?("KW "+kw(today)+(cur?" · Datei da":"")):"Noch kein Plan"), nDp);
 
   const abl=infos.filter(i=>i.kind==="plan");
   setTile("t-abl", abl.length===1?abl[0].title:(abl.length?abl.length+" Einträge":"Noch leer"),
@@ -1115,6 +1142,80 @@ function infoRow(it){
   return d;
 }
 const DP_SLOTS=["Diese Woche","Nächste Woche"];
+let dpDays={}, dpCur=null;
+const DPICON={
+ frueh:'<svg viewBox="0 0 24 24"><path d="M12 4.2v2.6M5.6 7.2l1.9 1.9M2.8 14h2.6M18.6 14h2.6M16.5 9.1l1.9-1.9"/><path d="M7.8 14a4.2 4.2 0 0 1 8.4 0"/><path d="M3.4 18.2h17.2"/></svg>',
+ mittag:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.4M12 19v2.4M2.6 12H5M19 12h2.4M5.3 5.3 7 7M17 17l1.7 1.7M18.7 5.3 17 7M7 17l-1.7 1.7"/></svg>',
+ abend:'<svg viewBox="0 0 24 24"><path d="M20.4 14.6A8.4 8.4 0 0 1 9.4 3.6a8.4 8.4 0 1 0 11 11z"/></svg>'};
+const DPTITEL={frueh:"Fr\u00fch",mittag:"Mittag",abend:"Abend"};
+function dpKey(k){return k;}
+async function loadDienst(){
+  if(!sb||!uid)return;
+  const von=addDays(iso(new Date()),-2), bis=addDays(iso(new Date()),14);
+  try{
+    const{data,error}=await sb.from("dienstplan").select("*").gte("tag",von).lte("tag",bis);
+    if(error)throw error;
+    dpDays={};(data||[]).forEach(r=>{dpDays[r.tag]=r;});
+  }catch(e){}
+}
+function dpBlock(key,rows){
+  const c=document.createElement("div");c.className="dpblock";
+  const h=document.createElement("h3");
+  const ic=document.createElement("span");ic.innerHTML=DPICON[key];h.appendChild(ic.firstChild);
+  h.appendChild(document.createTextNode(DPTITEL[key]));
+  c.appendChild(h);
+  if(!rows||!rows.length){
+    const e=document.createElement("div");e.className="dpempty";e.textContent="Keine Eintr\u00e4ge.";c.appendChild(e);
+  }else rows.forEach(r=>{
+    const d=document.createElement("div");d.className="dprow";
+    const a=document.createElement("span");a.textContent=(r[0]||"");
+    const b=document.createElement("b");b.textContent=(r[1]||"\u2013");
+    d.appendChild(a);d.appendChild(b);c.appendChild(d);
+  });
+  return c;
+}
+function renderDienstTag(){
+  if(!dpCur)dpCur=iso(new Date());
+  $("dpName").textContent=dayLabel(dpCur);
+  $("dpDate").textContent=dateLabel(dpCur);
+  const box=$("dpTag");box.innerHTML="";
+  const r=dpDays[dpCur];
+  if(!r){
+    const c=document.createElement("div");c.className="card";
+    const e=document.createElement("div");e.className="dpempty";
+    e.textContent="F\u00fcr diesen Tag ist noch kein Plan eingelesen.";
+    c.appendChild(e);box.appendChild(c);
+  }else{
+    ["frueh","mittag","abend"].forEach(k=>box.appendChild(dpBlock(k,r[k])));
+    if(r.frei){
+      const f=document.createElement("div");f.className="dpblock";
+      const h=document.createElement("h3");h.textContent="Frei";f.appendChild(h);
+      const t=document.createElement("div");t.className="dpfrei";t.textContent=r.frei;
+      f.appendChild(t);box.appendChild(f);
+    }
+  }
+  $("dpAdmin").classList.toggle("hide",!isAdmin);
+}
+async function dpImport(){
+  const msg=$("dpMsg");msg.textContent="";
+  let j;
+  try{j=JSON.parse($("dpJson").value);}catch(e){msg.textContent="Das ist kein g\u00fcltiges JSON.";return;}
+  const tage=Array.isArray(j)?j:(j.tage||[]);
+  if(!tage.length){msg.textContent="Keine Tage gefunden.";return;}
+  const rows=[];
+  for(const t of tage){
+    if(!t||!/^\d{4}-\d{2}-\d{2}$/.test(t.datum||"")){msg.textContent="Ein Tag hat kein g\u00fcltiges Datum.";return;}
+    rows.push({tag:t.datum,frueh:t.frueh||[],mittag:t.mittag||[],abend:t.abend||[],
+      frei:t.frei||"",updated_at:new Date().toISOString()});
+  }
+  try{
+    const{error}=await sb.from("dienstplan").upsert(rows,{onConflict:"tag"});
+    if(error)throw error;
+    await loadDienst();renderDienstTag();renderStart();
+    $("dpJson").value="";
+    msg.textContent=rows.length+" Tage gespeichert.";
+  }catch(e){msg.textContent="Speichern fehlgeschlagen: "+(e.message||e);}
+}
 function renderDienstplan(){
   const box=$("dpSlots");box.innerHTML="";
   DP_SLOTS.forEach(slot=>{
@@ -1299,7 +1400,7 @@ function show(v){
   if(v==="start")renderStart();
   if(v==="anleitung")renderList2("anleitung");
   if(v==="ablaeufe")renderList2("plan");
-  if(v==="dienstplan")renderDienstplan();
+  if(v==="dienstplan"){dpCur=iso(new Date());renderDienstTag();renderDienstplan();}
 }
 function renderAll(){renderTag();if(!$("v-saison").classList.contains("hide"))renderSaison();
   if(!$("v-bericht").classList.contains("hide"))renderBericht();
@@ -1484,6 +1585,9 @@ $("dOpenCal").onclick=()=>{if($("dcal").classList.contains("hide"))openDCal();el
 $("dcalPrev").onclick=()=>{const d=parseISO(dcalM);d.setMonth(d.getMonth()-1);dcalM=firstOfMonth(iso(d));drawDCal();};
 $("dcalNext").onclick=()=>{const d=parseISO(dcalM);d.setMonth(d.getMonth()+1);dcalM=firstOfMonth(iso(d));drawDCal();};
 $("dcalClose").onclick=closeDCal;
+$("dpPrev").onclick=()=>{dpCur=addDays(dpCur||iso(new Date()),-1);renderDienstTag();};
+$("dpNext").onclick=()=>{dpCur=addDays(dpCur||iso(new Date()),1);renderDienstTag();};
+$("dpSave").onclick=dpImport;
 document.querySelectorAll("nav button[data-v]").forEach(b=>b.onclick=()=>show(b.dataset.v));
 document.querySelectorAll(".tile").forEach(b=>b.onclick=()=>{
   const go=b.dataset.go;
