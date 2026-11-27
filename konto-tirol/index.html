@@ -514,6 +514,11 @@ nav button{position:relative}
 
   <section id="v-mehr" class="hide">
     <h1>Einstellungen</h1>
+    <div class="card hide" id="admCard">
+      <h2>Admin</h2>
+      <div id="admChips"></div>
+      <div class="note">Eingeschaltet erscheinen Hochladen, Ersetzen, Bearbeiten und das Einlesen des Dienstplans. Gilt nur auf diesem Gerät.</div>
+    </div>
     <div class="card">
       <h2>Design</h2>
       <label>Farben</label>
@@ -646,7 +651,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-28 01:40";
+const APP_VERSION="2026-11-28 02:00";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -1064,13 +1069,12 @@ function calcNotes(){
 /* ---------- Info ---------- */
 const KINDS={anleitung:["Anleitung","📘"],plan:["Arbeitsplan","🗒"],checkliste:["Checkliste","✅"],dienstplan:["Dienstplan","📅"]};
 let infos=[], isAdmin=false, editId=null, userMail="";
-/* Adminwerkzeuge nur am grossen Bildschirm (Mac) oder per #admin in der Adresse.
-   Am Telefon sieht der Admin die App wie jeder andere Benutzer. */
-function adminUI(){
-  if(!isAdmin)return false;
-  if((location.hash||"").toLowerCase()==="#admin")return true;
-  try{return window.matchMedia("(min-width:820px)").matches;}catch(e){return false;}
-}
+/* Adminwerkzeuge erscheinen nur, wenn der Admin-Modus eingeschaltet ist.
+   Die Einstellung gilt pro Geraet, ausgeschaltet sieht die App aus wie fuer jeden anderen. */
+const AMKEY=LS+":adminmode";
+function adminOn(){try{return localStorage.getItem(AMKEY)==="1"}catch(e){return false}}
+function setAdminOn(v){try{localStorage.setItem(AMKEY,v?"1":"0")}catch(e){}}
+function adminUI(){return isAdmin&&adminOn();}
 function userName(){
   const l=(userMail||"").split("@")[0].replace(/[._\-]+/g," ").trim();
   if(!l)return "";
@@ -1463,6 +1467,24 @@ function applyIcons(v){
   document.documentElement.dataset.icons=v;
   try{localStorage.setItem(ICKEY,v);}catch(e){}
 }
+function renderAdminChip(){
+  const c=$("admCard"),w=$("admChips");
+  if(!c||!w)return;
+  c.classList.toggle("hide",!isAdmin);
+  if(!isAdmin)return;
+  w.innerHTML="";
+  const b=document.createElement("button");b.type="button";
+  const on=adminOn();
+  b.className="themechip"+(on?" on":"");
+  b.textContent=on?"Admin-Modus an":"Admin-Modus aus";
+  b.onclick=()=>{
+    setAdminOn(!adminOn());
+    renderAdminChip();
+    renderStart();renderInfo();
+    if(!$("v-dienstplan").classList.contains("hide")){renderDienstTag();renderDienstplan();}
+  };
+  w.appendChild(b);
+}
 function renderIconChips(){
   const w=$("iconChips");if(!w)return;w.innerHTML="";
   const act=document.documentElement.dataset.icons||"b";
@@ -1509,7 +1531,7 @@ function renderSettings(){
   $("set-send").value=cfg.send||"";
   $("verline").textContent="Version "+APP_VERSION;
   $("set-count").textContent=Object.keys(days).filter(k=>hasData(days[k])).length;
-  applyCfg();renderThemes();renderIconChips();
+  applyCfg();renderThemes();renderIconChips();renderAdminChip();
 }
 function bindSettings(){
   const upd=(id,key)=>{$(id).onchange=()=>{cfg[key]=$(id).value;saveLocal();applyCfg();
