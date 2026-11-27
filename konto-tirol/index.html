@@ -646,7 +646,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-28 01:20";
+const APP_VERSION="2026-11-28 01:40";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -1064,6 +1064,13 @@ function calcNotes(){
 /* ---------- Info ---------- */
 const KINDS={anleitung:["Anleitung","📘"],plan:["Arbeitsplan","🗒"],checkliste:["Checkliste","✅"],dienstplan:["Dienstplan","📅"]};
 let infos=[], isAdmin=false, editId=null, userMail="";
+/* Adminwerkzeuge nur am grossen Bildschirm (Mac) oder per #admin in der Adresse.
+   Am Telefon sieht der Admin die App wie jeder andere Benutzer. */
+function adminUI(){
+  if(!isAdmin)return false;
+  if((location.hash||"").toLowerCase()==="#admin")return true;
+  try{return window.matchMedia("(min-width:820px)").matches;}catch(e){return false;}
+}
 function userName(){
   const l=(userMail||"").split("@")[0].replace(/[._\-]+/g," ").trim();
   if(!l)return "";
@@ -1131,7 +1138,7 @@ function renderStart(){
   setTile("t-anl", anl.length===1?anl[0].title:(anl.length?anl.length+" Anleitungen":"Noch leer"),
     anl.filter(isNew).length);
 
-  document.querySelectorAll(".adminonly").forEach(b=>b.classList.toggle("hide",!isAdmin));
+  document.querySelectorAll(".adminonly").forEach(b=>b.classList.toggle("hide",!adminUI()));
 }
 function renderList2(kind){
   const box=$("list-"+(kind==="plan"?"plan":kind));if(!box)return;
@@ -1139,7 +1146,7 @@ function renderList2(kind){
   const list=infos.filter(i=>i.kind===kind);
   list.forEach(it=>box.appendChild(infoRow(it)));
   const e=$("empty-"+(kind==="plan"?"plan":kind));if(e)e.textContent=list.length?"":"Noch keine Einträge.";
-  document.querySelectorAll(".adminonly").forEach(b=>b.classList.toggle("hide",!isAdmin));
+  document.querySelectorAll(".adminonly").forEach(b=>b.classList.toggle("hide",!adminUI()));
 }
 function infoRow(it){
   const k=it.kind,d=document.createElement("div");d.className="infoitem";
@@ -1203,7 +1210,7 @@ function renderDienstTag(){
       f.appendChild(t);box.appendChild(f);
     }
   }
-  $("dpAdmin").classList.toggle("hide",!isAdmin);
+  $("dpAdmin").classList.toggle("hide",!adminUI());
 }
 async function dpImport(){
   const msg=$("dpMsg");msg.textContent="";
@@ -1241,7 +1248,7 @@ function renderDienstplan(){
     }else{
       const m=document.createElement("div");m.className="note";m.textContent="Noch nicht hochgeladen.";c.appendChild(m);
     }
-    if(isAdmin){
+    if(adminUI()){
       const u=document.createElement("button");u.className="btn acc";u.style.cssText="width:100%;margin-top:8px";
       u.textContent=it?"Ersetzen":"Hochladen";
       u.onclick=()=>{openForm(it||null);$("if-kind").value="dienstplan";$("if-title").value=slot;};
@@ -1365,7 +1372,7 @@ async function openInfo(it,backTo){
       }catch(e){}
     }
   }
-  if(isAdmin){
+  if(adminUI()){
     const e=document.createElement("button");e.className="btn";e.style.cssText="width:100%;margin-top:14px";
     e.textContent="Bearbeiten";
     e.onclick=()=>{closeInfo(null,null);openForm(it);};
