@@ -181,6 +181,7 @@ html[data-icons="c"] .tile .ic{border-radius:14px;border:1px solid color-mix(in 
 .dprow b{flex:1;font-weight:600}
 .dpfrei{font-size:13px;color:var(--dim);padding:8px 2px 0}
 .dpempty{font-size:14px;color:var(--dim);padding:6px 2px}
+.dpfiles{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:18px 2px 8px;font-weight:650}
 .dpslot{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
 .dpslot h3{margin:0 0 8px;font-size:14px}
 .dpslot img{width:100%;border-radius:10px}
@@ -208,6 +209,13 @@ nav button{position:relative}
 #infoView .meta{font-size:12px;color:var(--dim);margin-bottom:14px}
 #infoView p{font-size:15px;line-height:1.5;margin:0 0 10px}
 #infoView img{width:100%;border-radius:10px}
+.zoomwrap{margin-top:10px}
+.zoombar{display:flex;gap:7px;align-items:center;margin-bottom:8px}
+.zoombar .btn{padding:9px 12px}
+.zoomlab{min-width:58px;text-align:center;font-size:13px;color:var(--dim);font-variant-numeric:tabular-nums}
+.zoombox{overflow:auto;-webkit-overflow-scrolling:touch;max-height:72vh;border:1px solid var(--line);
+  border-radius:12px;background:var(--card2);touch-action:pan-x pan-y}
+.zoombox img{display:block;width:100%;height:auto;border-radius:0}
 #infoView iframe{width:100%;height:78vh;border:1px solid var(--line);border-radius:10px;background:#fff}
 .chk{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer}
 .chk b{flex:0 0 22px;font-size:17px;line-height:1.2;color:var(--dim)}
@@ -289,6 +297,7 @@ nav button{position:relative}
       <button class="btn acc" id="dpSave" style="width:100%;margin-top:8px">Speichern</button>
       <div class="note" id="dpMsg" style="text-align:center"></div>
     </div>
+    <h2 class="dpfiles">Plan als Bild oder PDF</h2>
     <div id="dpSlots"></div>
     <div class="card"><div id="list-checkliste"></div><div class="note" id="empty-checkliste"></div></div>
   </section>
@@ -637,7 +646,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-28 01:00";
+const APP_VERSION="2026-11-28 01:20";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -1264,6 +1273,34 @@ function backBar(onBack){
   bb.appendChild(b);document.body.appendChild(bb);
   document.querySelectorAll("nav").forEach(n=>n.classList.add("hide"));
 }
+function bildViewer(url){
+  const wrap=document.createElement("div");wrap.className="zoomwrap";
+  const box=document.createElement("div");box.className="zoombox";
+  const img=document.createElement("img");img.src=url;img.alt="";
+  box.appendChild(img);
+  const bar=document.createElement("div");bar.className="zoombar";
+  const STUFEN=[100,150,200,300,400,600];
+  let i=0;
+  const setz=()=>{img.style.width=STUFEN[i]+"%";minus.disabled=i===0;plus.disabled=i===STUFEN.length-1;
+    lab.textContent=STUFEN[i]+" %";};
+  const mk=(t,fn)=>{const b=document.createElement("button");b.className="btn";b.textContent=t;b.onclick=fn;return b;};
+  const minus=mk("\u2212",()=>{if(i>0){i--;setz();}});
+  const plus=mk("+",()=>{if(i<STUFEN.length-1){i++;setz();}});
+  const fit=mk("Anpassen",()=>{i=0;setz();box.scrollTo(0,0);});
+  const lab=document.createElement("span");lab.className="zoomlab";
+  const auf=document.createElement("a");auf.href=url;auf.target="_blank";auf.rel="noopener";
+  auf.className="btn";auf.textContent="Gro\u00df";auf.style.textDecoration="none";
+  bar.append(minus,lab,plus,fit,auf);
+  let letzter=0;
+  box.addEventListener("click",e=>{
+    const t=Date.now();
+    if(t-letzter<320){ if(i===0){i=2;}else{i=0;} setz(); e.preventDefault(); }
+    letzter=t;
+  });
+  setz();
+  wrap.append(bar,box);
+  return wrap;
+}
 async function openInfo(it,backTo){
   const v=$("infoView");v.classList.remove("hide");v.classList.remove("page");v.innerHTML="";
   backBar(()=>closeInfo(it,backTo||"start"));
@@ -1303,7 +1340,7 @@ async function openInfo(it,backTo){
       try{
         const{data}=await sb.storage.from("infos").createSignedUrl(it.file_path,3600);
         const url=data&&data.signedUrl;
-        if(url&&it.file_type==="image"){const img=document.createElement("img");img.src=url;v.appendChild(img);}
+        if(url&&it.file_type==="image"){v.appendChild(bildViewer(url));}
         else if(url){const a=document.createElement("a");a.href=url;a.target="_blank";a.rel="noopener";
           a.className="btn acc";a.style.cssText="display:block;text-align:center;margin-top:10px;text-decoration:none";
           a.textContent="PDF öffnen";v.appendChild(a);}
