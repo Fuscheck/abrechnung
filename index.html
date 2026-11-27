@@ -450,8 +450,12 @@ function calc(r){
   const bar=(+r.abrechnung||0)-karten-abzug;
   const sgOn=(r.startgeld!==null&&r.startgeld!==undefined);
   const sg=sgOn?(+r.startgeld||0):0;
-  const hasIst=!!(+r.barIst);
-  const barnet=hasIst?(+r.barIst)-sg:0;
+  const ist=+r.barIst||0;
+  const any=!!((+r.abrechnung)||karten||gut||rech||ist);
+  // Trinkgeld steht fest, sobald das Bargeld gezaehlt ist – oder wenn gar kein
+  // Bargeld zu zaehlen ist (alles Karte: bar <= 0, der Rest ist Kartentrinkgeld).
+  const hasIst=any&&(ist>0||bar<=0.005);
+  const barnet=hasIst?ist-sg:0;
   const tg=hasIst?barnet-bar:0;
   const tgp=(+r.abrechnung||0)?tg/(+r.abrechnung):0;
   return{karten,gut,rech,abzug,bar,sg,sgOn,hasIst,barnet,tg,tgp,n:cntL(r.cards),nG:cntL(r.gutscheine),nR:cntL(r.rechnungen)};
@@ -463,7 +467,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://pjfsbayqdxfszlejcivq.supabase.co";
 const SB_KEY="sb_publishable_gOox3QM_BEounIvIbQJ7mQ_YF2hDzw4";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-26 17:40";
+const APP_VERSION="2026-11-27 01:30";
 const LS="abrechnung-sync-v1";
 let sb=null;
 
