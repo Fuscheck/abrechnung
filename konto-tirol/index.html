@@ -685,7 +685,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-28 09:10";
+const APP_VERSION="2026-11-28 12:00";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -1235,10 +1235,16 @@ function dpBlock(key,rows){
     c.appendChild(kopf);
     rows.forEach(r=>{
       const m=/^Chef\s*([^\u00b7]*?)\s*(?:\u00b7\s*Commi\s*(.*))?$/.exec(r[1]||"");
+      if(!m){
+        const d=document.createElement("div");d.className="dprow"+stKl(r[0]);
+        const a=document.createElement("span");a.textContent=r[0]||"";
+        const b=document.createElement("b");b.textContent=r[1]||"\u2013";
+        d.append(a,b);c.appendChild(d);return;
+      }
       const d=document.createElement("div");d.className="dpab"+stKl(r[0]);
       const a=document.createElement("i");a.textContent=r[0]||"";
-      const b1=document.createElement("b");b1.textContent=(m&&m[1])?m[1].trim():"\u2013";
-      const b2=document.createElement("b");b2.textContent=(m&&m[2])?m[2].trim():"\u2013";
+      const b1=document.createElement("b");b1.textContent=m[1]?m[1].trim():"\u2013";
+      const b2=document.createElement("b");b2.textContent=m[2]?m[2].trim():"\u2013";
       d.append(a,b1,b2);c.appendChild(d);
     });
   }else rows.forEach(r=>{
@@ -1265,7 +1271,10 @@ function renderDienstTag(){
     e.textContent="F\u00fcr diesen Tag ist noch kein Plan eingelesen.";
     c.appendChild(e);box.appendChild(c);
   }else{
-    ["frueh","mittag","abend"].forEach(k=>box.appendChild(dpBlock(k,r[k])));
+    const teile={frueh:(r.frueh||[]).slice(),mittag:(r.mittag||[]).slice(),abend:(r.abend||[]).slice()};
+    const iS=teile.frueh.findIndex(x=>(x[0]||"")==="Salatbuffet");
+    if(iS>=0){teile.abend=teile.abend.concat([teile.frueh[iS]]);teile.frueh.splice(iS,1);}
+    ["frueh","mittag","abend"].forEach(k=>box.appendChild(dpBlock(k,teile[k])));
     if(r.frei){
       const f=document.createElement("div");f.className="dpblock";
       const h=document.createElement("h3");h.textContent="Frei";f.appendChild(h);
