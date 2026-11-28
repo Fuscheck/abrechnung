@@ -179,6 +179,7 @@ html[data-icons="c"] .tile .ic{border-radius:14px;border:1px solid color-mix(in 
 .dprow:last-child{border-bottom:none}
 .dprow.sepu{border-bottom:3px double var(--line)}
 .dprow.sepo{border-top:3px double var(--line);margin-top:2px;padding-top:9px}
+.dprow.vorsep{border-bottom:none}
 .dpab{display:grid;grid-template-columns:34% 1fr 1fr;gap:8px;padding:7px 0;
   border-bottom:1px solid var(--line);font-size:14px;align-items:baseline}
 .dpab:last-child{border-bottom:none}
@@ -662,7 +663,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-28 02:30";
+const APP_VERSION="2026-11-28 03:00";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -1213,7 +1214,8 @@ function dpBlock(key,rows){
     const lab=r[0]||"";
     const d=document.createElement("div");d.className="dprow";
     if(key==="frueh"&&lab==="Fr\u00fchst\u00fccksdame")d.classList.add("sepu");
-    if(key==="frueh"&&lab==="bis 12 Uhr")d.classList.add("sepo");
+    if(key==="frueh"&&lab==="bis 12 Uhr"){d.classList.add("sepo");
+      const vor=c.querySelector(".dprow:last-of-type");if(vor)vor.classList.add("vorsep");}
     const a=document.createElement("span");a.textContent=lab;
     const b=document.createElement("b");b.textContent=(r[1]||"\u2013");
     d.appendChild(a);d.appendChild(b);c.appendChild(d);
