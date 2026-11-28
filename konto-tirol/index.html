@@ -707,7 +707,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-28 15:20";
+const APP_VERSION="2026-11-28 15:35";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -1235,16 +1235,18 @@ async function loadDienst(){
   }catch(e){}
 }
 const COMMI_STD=["Personaltisch abr\u00e4umen","Fr\u00fchst\u00fcck am Personaltisch vorbereiten"];
+const COMMI_VOR=COMMI_STD.concat(["Bei den Vorbereitungsarbeiten helfen"]);
 const SONDER={
  "I. Station":{
   chef:{vor:["Kerzen anz\u00fcnden"],
         nach:["Personaltisch aufr\u00e4umen und abwischen"]},
-  commi:{vor:COMMI_STD.concat(["Bei den Vorbereitungsarbeiten helfen"]),
+  commi:{vor:COMMI_VOR,
          nach:["Backoffice"]}},
  "II. Station":{
-  chef:{vor:["Empfohlene Weine vom Vortag auf alle Tische verteilen"],nach:[]},
-  commi:{vor:["Bei den Vorbereitungsarbeiten helfen"],
-         nach:COMMI_STD.concat(["Salat- und Fr\u00fchst\u00fccksbuffet"])}},
+  chef:{vor:["Wein-Empfehlung vorbereiten und Weine verteilen"],
+        nach:["Die K\u00f6rbe runtertragen und leer wieder zur\u00fcckbringen"]},
+  commi:{vor:COMMI_VOR,
+         nach:["Salatbuffet verr\u00e4umen","Fr\u00fchst\u00fccksbuffet vorbereiten"]}},
  "III. Station":{
   chef:{vor:["Mittwoch und Samstag: Aufstrich mit Br\u00f6tchen \u2013 Teller anrichten und zusammen mit dem Commi verteilen",
              "An allen anderen Tagen: bei den Vorbereitungsarbeiten helfen"],
