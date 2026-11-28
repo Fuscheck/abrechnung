@@ -186,6 +186,10 @@ html[data-icons="c"] .tile .ic{border-radius:14px;border:1px solid color-mix(in 
 .dpab i{font-style:normal;color:var(--dim)}
 .dpab b{font-weight:600}
 .dpab.kopf{border-bottom:1px solid var(--line);padding-bottom:5px}
+.st-I{--sc:#97CAFA}.st-II{--sc:#BAE293}.st-III{--sc:#FFFCA4}.st-R{--sc:#EE7AB6}
+.dprow.stat,.dpab.stat{border-left:3px solid var(--sc);padding-left:10px;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--sc) 13%,transparent),transparent 72%);
+  border-radius:0 8px 8px 0}
 .dpab.kopf span{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);font-weight:650}
 .dptiles{margin-bottom:10px}
 .tile .sub2{display:block;font-size:11.5px;color:var(--dim);margin-top:3px}
@@ -228,6 +232,8 @@ nav button{position:relative}
 .zoombox{overflow:auto;-webkit-overflow-scrolling:touch;max-height:72vh;border:1px solid var(--line);
   border-radius:12px;background:var(--card2);touch-action:pan-x pan-y}
 .zoombox img{display:block;width:100%;height:auto;border-radius:0}
+.zoombox.pdf{height:72vh;padding:0}
+.zoombox.pdf iframe{width:100%;height:100%;border:0;display:block;background:#fff}
 #infoView iframe{width:100%;height:78vh;border:1px solid var(--line);border-radius:10px;background:#fff}
 .chk{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer}
 .chk b{flex:0 0 22px;font-size:17px;line-height:1.2;color:var(--dim)}
@@ -663,7 +669,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-28 03:00";
+const APP_VERSION="2026-11-28 03:20";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -1190,6 +1196,9 @@ async function loadDienst(){
     dpDays={};(data||[]).forEach(r=>{dpDays[r.tag]=r;});
   }catch(e){}
 }
+const STKL={"I. Station":" stat st-I","II. Station":" stat st-II",
+  "III. Station":" stat st-III","Restaurant":" stat st-R"};
+function stKl(lab){return STKL[lab]||"";}
 function dpBlock(key,rows){
   const c=document.createElement("div");c.className="dpblock";
   const h=document.createElement("h3");
@@ -1204,7 +1213,7 @@ function dpBlock(key,rows){
     c.appendChild(kopf);
     rows.forEach(r=>{
       const m=/^Chef\s*([^\u00b7]*?)\s*(?:\u00b7\s*Commi\s*(.*))?$/.exec(r[1]||"");
-      const d=document.createElement("div");d.className="dpab";
+      const d=document.createElement("div");d.className="dpab"+stKl(r[0]);
       const a=document.createElement("i");a.textContent=r[0]||"";
       const b1=document.createElement("b");b1.textContent=(m&&m[1])?m[1].trim():"\u2013";
       const b2=document.createElement("b");b2.textContent=(m&&m[2])?m[2].trim():"\u2013";
@@ -1212,7 +1221,7 @@ function dpBlock(key,rows){
     });
   }else rows.forEach(r=>{
     const lab=r[0]||"";
-    const d=document.createElement("div");d.className="dprow";
+    const d=document.createElement("div");d.className="dprow"+stKl(lab);
     if(key==="frueh"&&lab==="Fr\u00fchst\u00fccksdame")d.classList.add("sepu");
     if(key==="frueh"&&lab==="bis 12 Uhr"){d.classList.add("sepo");
       const vor=c.querySelector(".dprow:last-of-type");if(vor)vor.classList.add("vorsep");}
@@ -1264,18 +1273,7 @@ async function dpImport(){
     msg.textContent=rows.length+" Tage gespeichert.";
   }catch(e){msg.textContent="Speichern fehlgeschlagen: "+(e.message||e);}
 }
-async function openPlanDirekt(it){
-  if(!it)return;
-  if(it.file_path&&it.file_type==="pdf"){
-    const w=window.open("","_blank");
-    try{
-      const{data}=await sb.storage.from("infos").createSignedUrl(it.file_path,3600);
-      if(w&&data&&data.signedUrl){w.location=data.signedUrl;markSeen(it);updateDot();return;}
-      if(w)w.close();
-    }catch(e){if(w)w.close();}
-  }
-  openInfo(it,"dienstplan");
-}
+function openPlanDirekt(it){ if(it)openInfo(it,"dienstplan"); }
 const DPTILEIC='<svg viewBox="0 0 32 32"><rect class="gst" x="3.4" y="5.4" width="25.2" height="23.2" rx="5"/><path class="sld" d="M3.4 10.4a5 5 0 0 1 5-5h15.2a5 5 0 0 1 5 5v2.6H3.4z"/><rect class="sld" x="8.6" y="2.2" width="3.2" height="6.4" rx="1.6"/><rect class="sld" x="20.2" y="2.2" width="3.2" height="6.4" rx="1.6"/></svg>';
 function renderDienstplan(){
   const box=$("dpSlots");box.innerHTML="";
@@ -1328,6 +1326,19 @@ function backBar(onBack){
   const b=document.createElement("button");b.textContent="‹ Zurück";b.onclick=onBack;
   bb.appendChild(b);document.body.appendChild(bb);
   document.querySelectorAll("nav").forEach(n=>n.classList.add("hide"));
+}
+function pdfViewer(url){
+  const wrap=document.createElement("div");wrap.className="zoomwrap";
+  const bar=document.createElement("div");bar.className="zoombar";
+  const lab=document.createElement("span");lab.className="zoomlab";lab.textContent="PDF";
+  const auf=document.createElement("a");auf.href=url;auf.target="_blank";auf.rel="noopener";
+  auf.className="btn";auf.textContent="Gro\u00df";auf.style.textDecoration="none";
+  bar.append(lab,auf);
+  const box=document.createElement("div");box.className="zoombox pdf";
+  const f=document.createElement("iframe");f.src=url;f.loading="lazy";
+  box.appendChild(f);
+  wrap.append(bar,box);
+  return wrap;
 }
 function bildViewer(url){
   const wrap=document.createElement("div");wrap.className="zoomwrap";
@@ -1397,9 +1408,7 @@ async function openInfo(it,backTo){
         const{data}=await sb.storage.from("infos").createSignedUrl(it.file_path,3600);
         const url=data&&data.signedUrl;
         if(url&&it.file_type==="image"){v.appendChild(bildViewer(url));}
-        else if(url){const a=document.createElement("a");a.href=url;a.target="_blank";a.rel="noopener";
-          a.className="btn acc";a.style.cssText="display:block;text-align:center;margin-top:10px;text-decoration:none";
-          a.textContent="PDF öffnen";v.appendChild(a);}
+        else if(url){v.appendChild(pdfViewer(url));}
         if(url){
           const dl=document.createElement("button");dl.className="btn";
           dl.style.cssText="width:100%;margin-top:10px";dl.textContent="Herunterladen";
