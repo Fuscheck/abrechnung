@@ -707,7 +707,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-28 15:45";
+const APP_VERSION="2026-11-28 16:10";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -1255,7 +1255,12 @@ const SONDER={
               "An allen anderen Tagen: bei den Vorbereitungsarbeiten helfen"],
          nach:COMMI_STD.concat(["G\u00e4stetische abr\u00e4umen","K\u00e4sebuffet aufr\u00e4umen",
                                  "Schilder auf das Tablett","K\u00fchlschr\u00e4nke ausschalten","Alles auswischen"])}},
- "Restaurant":{chef:{vor:[],nach:[]},commi:{vor:[],nach:[]}}
+ "Restaurant":{
+  chef:{vor:["An der Bar helfen","Restaurant kontrollieren",
+             "Beim Serviettenfalten f\u00fcr den n\u00e4chsten Tag helfen"],
+        nach:["Kaffeemaschine an der Bar sauber machen","Schank an der Bar sauber machen"]},
+  commi:{vor:["Fr\u00fchst\u00fcck vorbereiten und abz\u00e4hlen","Servietten falten"],
+         nach:["Besteck f\u00fcr alle drei Stationen im Saal vorbereiten und verteilen"]}}
 };
 const SCKL={"I. Station":"st-I","II. Station":"st-II","III. Station":"st-III","Restaurant":"st-R"};
 let sonderWer="chef";
