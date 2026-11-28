@@ -174,6 +174,7 @@ html[data-icons="c"] .tile .ic{border-radius:14px;border:1px solid color-mix(in 
 .dpblock{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:10px}
 .dpblock h3{display:flex;align-items:center;gap:8px;margin:0 0 9px;font-size:12px;letter-spacing:.08em;
   text-transform:uppercase;color:var(--dim);font-weight:650}
+.dpblock h3 .dpok{font-style:normal;color:var(--txt);text-transform:none;letter-spacing:0;font-size:13px;font-weight:650}
 .dpblock h3 svg{width:19px;height:19px;fill:none;stroke:var(--acc);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .dprow{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
 .dprow:last-child{border-bottom:none}
@@ -672,7 +673,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-28 03:40";
+const APP_VERSION="2026-11-28 03:55";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -1207,6 +1208,12 @@ function dpBlock(key,rows){
   const h=document.createElement("h3");
   const ic=document.createElement("span");ic.innerHTML=DPICON[key];h.appendChild(ic.firstChild);
   h.appendChild(document.createTextNode(DPTITEL[key]));
+  // Oberkellner steht im Kopf der Schicht, nicht als eigene Zeile
+  let ok="";
+  if(rows&&rows.length){
+    rows=rows.filter(r=>{ if((r[0]||"")==="Oberkellner"){ok=r[1]||"";return false;} return true; });
+  }
+  if(ok){const e=document.createElement("em");e.className="dpok";e.textContent="\u00b7 "+ok;h.appendChild(e);}
   c.appendChild(h);
   if(!rows||!rows.length){
     const e=document.createElement("div");e.className="dpempty";e.textContent="Keine Eintr\u00e4ge.";c.appendChild(e);
