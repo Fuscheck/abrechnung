@@ -187,9 +187,12 @@ html[data-icons="c"] .tile .ic{border-radius:14px;border:1px solid color-mix(in 
 .dpab b{font-weight:600}
 .dpab.kopf{border-bottom:1px solid var(--line);padding-bottom:5px}
 .st-I{--sc:#97CAFA}.st-II{--sc:#BAE293}.st-III{--sc:#FFFCA4}.st-R{--sc:#EE7AB6}
-.dprow.stat,.dpab.stat{border-left:3px solid var(--sc);padding-left:10px;
-  background:linear-gradient(90deg,color-mix(in srgb,var(--sc) 13%,transparent),transparent 72%);
-  border-radius:0 8px 8px 0}
+.dprow.stat,.dpab.stat{border-left:3px solid var(--sc);border-right:3px solid var(--sc);
+  padding-left:10px;padding-right:10px;border-radius:7px;
+  background:linear-gradient(90deg,
+    color-mix(in srgb,var(--sc) 20%,transparent) 0%,
+    transparent 42%, transparent 58%,
+    color-mix(in srgb,var(--sc) 20%,transparent) 100%)}
 .dpab.kopf span{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);font-weight:650}
 .dptiles{margin-bottom:10px}
 .tile .sub2{display:block;font-size:11.5px;color:var(--dim);margin-top:3px}
@@ -232,8 +235,8 @@ nav button{position:relative}
 .zoombox{overflow:auto;-webkit-overflow-scrolling:touch;max-height:72vh;border:1px solid var(--line);
   border-radius:12px;background:var(--card2);touch-action:pan-x pan-y}
 .zoombox img{display:block;width:100%;height:auto;border-radius:0}
-.zoombox.pdf{height:72vh;padding:0}
-.zoombox.pdf iframe{width:100%;height:100%;border:0;display:block;background:#fff}
+.zoombox.pdf{max-height:72vh;padding:0}
+.zoombox.pdf iframe{border:0;display:block;background:#fff}
 #infoView iframe{width:100%;height:78vh;border:1px solid var(--line);border-radius:10px;background:#fff}
 .chk{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer}
 .chk b{flex:0 0 22px;font-size:17px;line-height:1.2;color:var(--dim)}
@@ -669,7 +672,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-28 03:20";
+const APP_VERSION="2026-11-28 03:40";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -1329,14 +1332,23 @@ function backBar(onBack){
 }
 function pdfViewer(url){
   const wrap=document.createElement("div");wrap.className="zoomwrap";
-  const bar=document.createElement("div");bar.className="zoombar";
-  const lab=document.createElement("span");lab.className="zoomlab";lab.textContent="PDF";
-  const auf=document.createElement("a");auf.href=url;auf.target="_blank";auf.rel="noopener";
-  auf.className="btn";auf.textContent="Gro\u00df";auf.style.textDecoration="none";
-  bar.append(lab,auf);
   const box=document.createElement("div");box.className="zoombox pdf";
   const f=document.createElement("iframe");f.src=url;f.loading="lazy";
   box.appendChild(f);
+  const bar=document.createElement("div");bar.className="zoombar";
+  const STUFEN=[100,150,200,300,400,600];
+  let i=0;
+  const setz=()=>{f.style.width=STUFEN[i]+"%";f.style.height=(72*STUFEN[i]/100)+"vh";
+    minus.disabled=i===0;plus.disabled=i===STUFEN.length-1;lab.textContent=STUFEN[i]+" %";};
+  const mk=(t,fn)=>{const b=document.createElement("button");b.className="btn";b.textContent=t;b.onclick=fn;return b;};
+  const minus=mk("\u2212",()=>{if(i>0){i--;setz();}});
+  const plus=mk("+",()=>{if(i<STUFEN.length-1){i++;setz();}});
+  const fit=mk("Anpassen",()=>{i=0;setz();box.scrollTo(0,0);});
+  const lab=document.createElement("span");lab.className="zoomlab";
+  const auf=document.createElement("a");auf.href=url;auf.target="_blank";auf.rel="noopener";
+  auf.className="btn";auf.textContent="Gro\u00df";auf.style.textDecoration="none";
+  bar.append(minus,lab,plus,fit,auf);
+  setz();
   wrap.append(bar,box);
   return wrap;
 }
