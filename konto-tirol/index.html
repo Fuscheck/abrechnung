@@ -177,6 +177,17 @@ html[data-icons="c"] .tile .ic{border-radius:14px;border:1px solid color-mix(in 
 .dpblock h3 svg{width:19px;height:19px;fill:none;stroke:var(--acc);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .dprow{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
 .dprow:last-child{border-bottom:none}
+.dprow.sepu{border-bottom:3px double var(--line)}
+.dprow.sepo{border-top:3px double var(--line);margin-top:2px;padding-top:9px}
+.dpab{display:grid;grid-template-columns:34% 1fr 1fr;gap:8px;padding:7px 0;
+  border-bottom:1px solid var(--line);font-size:14px;align-items:baseline}
+.dpab:last-child{border-bottom:none}
+.dpab i{font-style:normal;color:var(--dim)}
+.dpab b{font-weight:600}
+.dpab.kopf{border-bottom:1px solid var(--line);padding-bottom:5px}
+.dpab.kopf span{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);font-weight:650}
+.dptiles{margin-bottom:10px}
+.tile .sub2{display:block;font-size:11.5px;color:var(--dim);margin-top:3px}
 .dprow span{flex:0 0 42%;color:var(--dim)}
 .dprow b{flex:1;font-weight:600}
 .dpfrei{font-size:13px;color:var(--dim);padding:8px 2px 0}
@@ -651,7 +662,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-28 02:00";
+const APP_VERSION="2026-11-28 02:30";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -1186,9 +1197,24 @@ function dpBlock(key,rows){
   c.appendChild(h);
   if(!rows||!rows.length){
     const e=document.createElement("div");e.className="dpempty";e.textContent="Keine Eintr\u00e4ge.";c.appendChild(e);
+  }else if(key==="abend"&&rows.some(r=>/^Chef /.test(r[1]||""))){
+    const kopf=document.createElement("div");kopf.className="dpab kopf";
+    ["","Chef","Commi"].forEach(t=>{const x=document.createElement("span");x.textContent=t;kopf.appendChild(x);});
+    c.appendChild(kopf);
+    rows.forEach(r=>{
+      const m=/^Chef\s*([^\u00b7]*?)\s*(?:\u00b7\s*Commi\s*(.*))?$/.exec(r[1]||"");
+      const d=document.createElement("div");d.className="dpab";
+      const a=document.createElement("i");a.textContent=r[0]||"";
+      const b1=document.createElement("b");b1.textContent=(m&&m[1])?m[1].trim():"\u2013";
+      const b2=document.createElement("b");b2.textContent=(m&&m[2])?m[2].trim():"\u2013";
+      d.append(a,b1,b2);c.appendChild(d);
+    });
   }else rows.forEach(r=>{
+    const lab=r[0]||"";
     const d=document.createElement("div");d.className="dprow";
-    const a=document.createElement("span");a.textContent=(r[0]||"");
+    if(key==="frueh"&&lab==="Fr\u00fchst\u00fccksdame")d.classList.add("sepu");
+    if(key==="frueh"&&lab==="bis 12 Uhr")d.classList.add("sepo");
+    const a=document.createElement("span");a.textContent=lab;
     const b=document.createElement("b");b.textContent=(r[1]||"\u2013");
     d.appendChild(a);d.appendChild(b);c.appendChild(d);
   });
@@ -1236,34 +1262,51 @@ async function dpImport(){
     msg.textContent=rows.length+" Tage gespeichert.";
   }catch(e){msg.textContent="Speichern fehlgeschlagen: "+(e.message||e);}
 }
+async function openPlanDirekt(it){
+  if(!it)return;
+  if(it.file_path&&it.file_type==="pdf"){
+    const w=window.open("","_blank");
+    try{
+      const{data}=await sb.storage.from("infos").createSignedUrl(it.file_path,3600);
+      if(w&&data&&data.signedUrl){w.location=data.signedUrl;markSeen(it);updateDot();return;}
+      if(w)w.close();
+    }catch(e){if(w)w.close();}
+  }
+  openInfo(it,"dienstplan");
+}
+const DPTILEIC='<svg viewBox="0 0 32 32"><rect class="gst" x="3.4" y="5.4" width="25.2" height="23.2" rx="5"/><path class="sld" d="M3.4 10.4a5 5 0 0 1 5-5h15.2a5 5 0 0 1 5 5v2.6H3.4z"/><rect class="sld" x="8.6" y="2.2" width="3.2" height="6.4" rx="1.6"/><rect class="sld" x="20.2" y="2.2" width="3.2" height="6.4" rx="1.6"/></svg>';
 function renderDienstplan(){
   const box=$("dpSlots");box.innerHTML="";
-  DP_SLOTS.forEach(slot=>{
-    const it=infos.find(i=>i.kind==="dienstplan"&&i.title===slot);
+  const grid=document.createElement("div");grid.className="tiles dptiles";
+  DP_SLOTS.forEach((slot,i)=>{
+    const it=infos.find(x=>x.kind==="dienstplan"&&x.title===slot);
+    const t=document.createElement("button");
+    t.className="tile "+(i?"t-dp":"t-abr");
+    const ic=document.createElement("span");ic.className="ic";ic.innerHTML=DPTILEIC;
+    const nm=document.createElement("b");nm.textContent=slot;
+    const sb2=document.createElement("span");sb2.className="sb";
+    sb2.textContent=it?((it.file_type==="pdf"?"PDF":"Bild")+" \u00b7 "+
+      new Date(it.updated_at).toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"}))
+      :"Noch nichts hochgeladen";
+    const go=document.createElement("span");go.className="go";go.textContent="\u203a";
+    t.append(ic,nm,sb2,go);
+    if(it&&isNew(it)){const bd=document.createElement("span");bd.className="badge";bd.textContent="NEU";t.appendChild(bd);}
+    t.onclick=()=>{ if(it)openPlanDirekt(it); else if(adminUI()){openForm(null);$("if-kind").value="dienstplan";$("if-title").value=slot;} };
+    grid.appendChild(t);
+  });
+  box.appendChild(grid);
+  if(adminUI())DP_SLOTS.forEach(slot=>{
+    const it=infos.find(x=>x.kind==="dienstplan"&&x.title===slot);
     const c=document.createElement("div");c.className="dpslot";
-    const h=document.createElement("h3");h.textContent=slot;c.appendChild(h);
-    if(it){
-      const b=document.createElement("button");b.className="btn";b.style.width="100%";
-      b.textContent=(it.file_type==="pdf"?"PDF öffnen":"Plan ansehen")+(isNew(it)?" · NEU":"");
-      b.onclick=()=>openInfo(it,"dienstplan");c.appendChild(b);
-      const m=document.createElement("div");m.className="note";
-      m.textContent="geändert "+new Date(it.updated_at).toLocaleString("de-AT",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
-      c.appendChild(m);
-    }else{
-      const m=document.createElement("div");m.className="note";m.textContent="Noch nicht hochgeladen.";c.appendChild(m);
-    }
-    if(adminUI()){
-      const u=document.createElement("button");u.className="btn acc";u.style.cssText="width:100%;margin-top:8px";
-      u.textContent=it?"Ersetzen":"Hochladen";
-      u.onclick=()=>{openForm(it||null);$("if-kind").value="dienstplan";$("if-title").value=slot;};
-      c.appendChild(u);
-    }
-    box.appendChild(c);
+    const u=document.createElement("button");u.className="btn";u.style.width="100%";
+    u.textContent=slot+": "+(it?"Ersetzen":"Hochladen");
+    u.onclick=()=>{openForm(it||null);$("if-kind").value="dienstplan";$("if-title").value=slot;};
+    c.appendChild(u);box.appendChild(c);
   });
   const other=infos.filter(i=>i.kind==="dienstplan"&&DP_SLOTS.indexOf(i.title)<0);
   const lb=$("list-checkliste");lb.innerHTML="";
   other.forEach(it=>lb.appendChild(infoRow(it)));
-  $("empty-checkliste").textContent=other.length?"":"";
+  $("empty-checkliste").textContent="";
 }
 function renderInfo(){
   renderList2("anleitung");renderList2("plan");
