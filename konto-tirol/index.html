@@ -105,9 +105,11 @@ input[type=date]{min-height:44px}
 .lklabel.ok{color:var(--ok)}
 #splash .ini{margin-top:12px;font-size:13px;letter-spacing:.12em;color:#9c3520;font-weight:700}
 .locked{overflow:hidden}
-nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--bgt);
-  backdrop-filter:blur(12px);border-top:1px solid var(--line);
-  padding-bottom:env(safe-area-inset-bottom);z-index:20}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--bg);
+  border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom);z-index:20;
+  /* eigene Ebene: sonst wandert die Leiste auf dem iPhone beim Scrollen mit */
+  transform:translateZ(0);will-change:transform;backface-visibility:hidden}
 nav button{flex:1;background:none;border:none;padding:11px 2px 9px;color:var(--dim);font-size:11px;cursor:pointer}
 nav button i{display:block;margin:0 auto 3px;width:23px;height:23px}
 nav button i svg{width:23px;height:23px;display:block;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -705,7 +707,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-28 13:00";
+const APP_VERSION="2026-11-28 14:20";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
