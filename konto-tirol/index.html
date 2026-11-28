@@ -707,7 +707,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-28 14:20";
+const APP_VERSION="2026-11-28 15:20";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -1239,7 +1239,7 @@ const SONDER={
  "I. Station":{
   chef:{vor:["Kerzen anz\u00fcnden"],
         nach:["Personaltisch aufr\u00e4umen und abwischen"]},
-  commi:{vor:["Bei den Vorbereitungsarbeiten helfen"].concat(COMMI_STD),
+  commi:{vor:COMMI_STD.concat(["Bei den Vorbereitungsarbeiten helfen"]),
          nach:["Backoffice"]}},
  "II. Station":{
   chef:{vor:["Empfohlene Weine vom Vortag auf alle Tische verteilen"],nach:[]},
