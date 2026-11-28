@@ -309,16 +309,8 @@ nav button{position:relative}
       <div class="dlabel"><b id="dpName">–</b><span id="dpDate">–</span></div>
       <button class="btn arrow" id="dpNext" aria-label="Nächster Tag">›</button>
     </div>
+    <button class="btn acc hide" id="dpManage" style="width:100%;margin-bottom:12px">Plan verwalten</button>
     <div id="dpTag"></div>
-    <div class="card hide" id="dpAdmin">
-      <h2>Plan einlesen</h2>
-      <div class="note" style="margin-bottom:8px">JSON aus der Dienstplan-App einfügen und speichern.</div>
-      <textarea id="dpJson" rows="5" placeholder="{&quot;tage&quot;:[ … ]}"
-        style="width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;
-               padding:10px;color:var(--txt);font:13px/1.4 ui-monospace,Menlo,monospace;resize:vertical"></textarea>
-      <button class="btn acc" id="dpSave" style="width:100%;margin-top:8px">Speichern</button>
-      <div class="note" id="dpMsg" style="text-align:center"></div>
-    </div>
     <h2 class="dpfiles">Plan als Bild oder PDF</h2>
     <div id="dpSlots"></div>
     <div class="card"><div id="list-checkliste"></div><div class="note" id="empty-checkliste"></div></div>
@@ -534,6 +526,26 @@ nav button{position:relative}
   
   </section>
 
+  <section id="v-dpimport" class="hide">
+    <h1>Plan verwalten</h1>
+    <div class="card">
+      <h2>Plan einlesen</h2>
+      <div class="note" style="margin-bottom:8px">In der Dienstplan-App auf <b>→ Tirol-App</b> tippen, dann hier einfügen.</div>
+      <textarea id="dpJson" rows="7" placeholder="{&quot;tage&quot;:[ … ]}"
+        style="width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;
+               padding:10px;color:var(--txt);font:13px/1.4 ui-monospace,Menlo,monospace;resize:vertical"></textarea>
+      <div class="row" style="margin-top:8px">
+        <button class="btn" id="dpPaste" style="flex:1">Einfügen</button>
+        <button class="btn acc" id="dpSave" style="flex:1.4">Speichern</button>
+      </div>
+      <div class="note" id="dpMsg" style="text-align:center"></div>
+    </div>
+    <div class="card">
+      <h2>Plan als Bild oder PDF</h2>
+      <div id="dpFiles"></div>
+    </div>
+  </section>
+
   <section id="v-mehr" class="hide">
     <h1>Einstellungen</h1>
     <div class="card hide" id="admCard">
@@ -673,7 +685,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-28 03:55";
+const APP_VERSION="2026-11-28 09:10";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -1261,7 +1273,7 @@ function renderDienstTag(){
       f.appendChild(t);box.appendChild(f);
     }
   }
-  $("dpAdmin").classList.toggle("hide",!adminUI());
+  $("dpManage").classList.toggle("hide",!adminUI());
 }
 async function dpImport(){
   const msg=$("dpMsg");msg.textContent="";
@@ -1281,10 +1293,28 @@ async function dpImport(){
     await loadDienst();renderDienstTag();renderStart();
     $("dpJson").value="";
     msg.textContent=rows.length+" Tage gespeichert.";
+    const bb=$("backbar");if(bb)bb.remove();
+    document.querySelectorAll("nav").forEach(n=>n.classList.remove("hide"));
+    show("dienstplan");renderDienstTag();renderDienstplan();
   }catch(e){msg.textContent="Speichern fehlgeschlagen: "+(e.message||e);}
 }
 function openPlanDirekt(it){ if(it)openInfo(it,"dienstplan"); }
 const DPTILEIC='<svg viewBox="0 0 32 32"><rect class="gst" x="3.4" y="5.4" width="25.2" height="23.2" rx="5"/><path class="sld" d="M3.4 10.4a5 5 0 0 1 5-5h15.2a5 5 0 0 1 5 5v2.6H3.4z"/><rect class="sld" x="8.6" y="2.2" width="3.2" height="6.4" rx="1.6"/><rect class="sld" x="20.2" y="2.2" width="3.2" height="6.4" rx="1.6"/></svg>';
+function openDpImport(){
+  show("dpimport");
+  const box=$("dpFiles");box.innerHTML="";
+  DP_SLOTS.forEach(slot=>{
+    const it=infos.find(x=>x.kind==="dienstplan"&&x.title===slot);
+    const u=document.createElement("button");u.className="btn";
+    u.style.cssText="width:100%;margin-bottom:8px";
+    u.textContent=slot+" \u00b7 "+(it?"Ersetzen":"Hochladen");
+    u.onclick=()=>{openForm(it||null);$("if-kind").value="dienstplan";$("if-title").value=slot;};
+    box.appendChild(u);
+  });
+  backBar(()=>{const bb=$("backbar");if(bb)bb.remove();
+    document.querySelectorAll("nav").forEach(n=>n.classList.remove("hide"));
+    show("dienstplan");renderDienstTag();renderDienstplan();});
+}
 function renderDienstplan(){
   const box=$("dpSlots");box.innerHTML="";
   const grid=document.createElement("div");grid.className="tiles dptiles";
@@ -1305,14 +1335,7 @@ function renderDienstplan(){
     grid.appendChild(t);
   });
   box.appendChild(grid);
-  if(adminUI())DP_SLOTS.forEach(slot=>{
-    const it=infos.find(x=>x.kind==="dienstplan"&&x.title===slot);
-    const c=document.createElement("div");c.className="dpslot";
-    const u=document.createElement("button");u.className="btn";u.style.width="100%";
-    u.textContent=slot+": "+(it?"Ersetzen":"Hochladen");
-    u.onclick=()=>{openForm(it||null);$("if-kind").value="dienstplan";$("if-title").value=slot;};
-    c.appendChild(u);box.appendChild(c);
-  });
+
   const other=infos.filter(i=>i.kind==="dienstplan"&&DP_SLOTS.indexOf(i.title)<0);
   const lb=$("list-checkliste");lb.innerHTML="";
   other.forEach(it=>lb.appendChild(infoRow(it)));
@@ -1505,7 +1528,7 @@ async function delInfo(){
 /* ---------- Navigation ---------- */
 const ABR=["tag","saison","bericht","scheine"];
 function show(v){
-  ["start","tag","saison","bericht","scheine","anleitung","ablaeufe","dienstplan","form","mehr"].forEach(x=>{
+  ["start","tag","saison","bericht","scheine","anleitung","ablaeufe","dienstplan","dpimport","form","mehr"].forEach(x=>{
     $("v-"+x).classList.toggle("hide",x!==v);
   });
   document.querySelectorAll("nav button[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
@@ -1727,6 +1750,11 @@ $("dcalClose").onclick=closeDCal;
 $("dpPrev").onclick=()=>{dpCur=addDays(dpCur||iso(new Date()),-1);renderDienstTag();};
 $("dpNext").onclick=()=>{dpCur=addDays(dpCur||iso(new Date()),1);renderDienstTag();};
 $("dpSave").onclick=dpImport;
+$("dpManage").onclick=openDpImport;
+$("dpPaste").onclick=async()=>{
+  try{const t=await navigator.clipboard.readText();if(t)$("dpJson").value=t;}
+  catch(e){$("dpMsg").textContent="Einf\u00fcgen per Knopf geht hier nicht \u2013 bitte \u2318V im Feld.";}
+};
 document.querySelectorAll("nav button[data-v]").forEach(b=>b.onclick=()=>show(b.dataset.v));
 document.querySelectorAll(".tile").forEach(b=>b.onclick=()=>{
   const go=b.dataset.go;
