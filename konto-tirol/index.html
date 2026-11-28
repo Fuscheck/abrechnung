@@ -707,7 +707,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-28 15:35";
+const APP_VERSION="2026-11-28 15:45";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -1253,7 +1253,8 @@ const SONDER={
         nach:["Kaffeestation in der K\u00fcche"]},
   commi:{vor:["Mittwoch und Samstag: Brot machen und zusammen mit dem Chef verteilen",
               "An allen anderen Tagen: bei den Vorbereitungsarbeiten helfen"],
-         nach:COMMI_STD.concat(["G\u00e4stetische abr\u00e4umen","K\u00fchlschr\u00e4nke ausschalten","Alles sauber machen"])}},
+         nach:COMMI_STD.concat(["G\u00e4stetische abr\u00e4umen","K\u00e4sebuffet aufr\u00e4umen",
+                                 "Schilder auf das Tablett","K\u00fchlschr\u00e4nke ausschalten","Alles auswischen"])}},
  "Restaurant":{chef:{vor:[],nach:[]},commi:{vor:[],nach:[]}}
 };
 const SCKL={"I. Station":"st-I","II. Station":"st-II","III. Station":"st-III","Restaurant":"st-R"};
