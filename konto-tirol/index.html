@@ -196,6 +196,26 @@ html[data-icons="c"] .tile .ic{border-radius:14px;border:1px solid color-mix(in 
     color-mix(in srgb,var(--sc) 20%,transparent) 100%)}
 .dpab.kopf span{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);font-weight:650}
 .dptiles{margin-bottom:10px}
+.dpab i .inf,.dprow span .inf{display:inline-flex;align-items:center;justify-content:center;
+  width:16px;height:16px;border-radius:50%;border:1px solid currentColor;font-size:10px;
+  font-weight:700;margin-left:6px;opacity:.75;vertical-align:1px}
+.dpab.klick,.dprow.klick{cursor:pointer}
+#sonder{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.55);
+  display:flex;align-items:flex-end;justify-content:center;padding:0}
+#sonder .sheet{width:100%;max-width:560px;background:var(--card);border:1px solid var(--line);
+  border-radius:18px 18px 0 0;padding:16px 14px calc(16px + env(safe-area-inset-bottom));
+  max-height:86vh;overflow:auto;border-top:4px solid var(--sc,var(--acc))}
+#sonder h2{margin:0 0 2px;font-size:19px}
+#sonder .wer{display:flex;gap:8px;margin:12px 0 14px}
+#sonder .wer button{flex:1;padding:10px;border-radius:999px;border:1px solid var(--line);
+  background:var(--card2);color:var(--txt);font:inherit;font-weight:650;cursor:pointer}
+#sonder .wer button.on{background:var(--sc,var(--acc));border-color:var(--sc,var(--acc));color:#17171c}
+#sonder h3{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);
+  margin:14px 0 6px;font-weight:650}
+#sonder ul{margin:0;padding-left:18px}
+#sonder li{margin:4px 0;font-size:14.5px}
+#sonder .leer{font-size:14px;color:var(--dim)}
+#sonder .tr{height:1px;background:var(--line);margin:14px 0 0}
 .tile .sub2{display:block;font-size:11.5px;color:var(--dim);margin-top:3px}
 .dprow span{flex:0 0 42%;color:var(--dim)}
 .dprow b{flex:1;font-weight:600}
@@ -685,7 +705,7 @@ function isLocked(k){const r=days[k];return !!(r&&r.locked);}
 const SB_URL="https://xyhclmcxwzikndxyciad.supabase.co";
 const SB_KEY="sb_publishable_o5ixmEfOPIjiPPUlDUIvQg_sKDBppc3";
 const TABLE="abrechnung";
-const APP_VERSION="2026-11-28 12:00";
+const APP_VERSION="2026-11-28 12:30";
 const LS="abrechnung-sync-tirol-v1";
 let sb=null;
 
@@ -1212,6 +1232,68 @@ async function loadDienst(){
     dpDays={};(data||[]).forEach(r=>{dpDays[r.tag]=r;});
   }catch(e){}
 }
+const COMMI_STD=["Personaltisch abr\u00e4umen","Fr\u00fchst\u00fcck am Personaltisch vorbereiten"];
+const SONDER={
+ "I. Station":{
+  chef:{vor:["Kerzen anz\u00fcnden"],
+        nach:["Personaltisch abr\u00e4umen und eindecken","Backoffice"]},
+  commi:{vor:["Bei den Vorbereitungsarbeiten helfen"],nach:COMMI_STD}},
+ "II. Station":{
+  chef:{vor:["Empfohlene Weine vom Vortag auf alle Tische verteilen"],nach:[]},
+  commi:{vor:["Bei den Vorbereitungsarbeiten helfen"],
+         nach:COMMI_STD.concat(["Salat- und Fr\u00fchst\u00fccksbuffet"])}},
+ "III. Station":{
+  chef:{vor:["Mittwoch und Samstag: Aufstrich mit Br\u00f6tchen \u2013 Teller anrichten und zusammen mit dem Commi verteilen",
+             "An allen anderen Tagen: bei den Vorbereitungsarbeiten helfen"],
+        nach:["Kaffeestation in der K\u00fcche"]},
+  commi:{vor:["Mittwoch und Samstag: Brot machen und zusammen mit dem Chef verteilen",
+              "An allen anderen Tagen: bei den Vorbereitungsarbeiten helfen"],
+         nach:COMMI_STD.concat(["G\u00e4stetische abr\u00e4umen","K\u00fchlschr\u00e4nke ausschalten","Alles sauber machen"])}},
+ "Restaurant":{chef:{vor:[],nach:[]},commi:{vor:[],nach:[]}}
+};
+const SCKL={"I. Station":"st-I","II. Station":"st-II","III. Station":"st-III","Restaurant":"st-R"};
+let sonderWer="chef";
+function sonderAuf(station){
+  sonderWer="chef";
+  let w=$("sonder");
+  if(w)w.remove();
+  w=document.createElement("div");w.id="sonder";w.className=SCKL[station]||"";
+  const sh=document.createElement("div");sh.className="sheet";
+  const h=document.createElement("h2");h.textContent=station;
+  const n=document.createElement("div");n.className="note";n.textContent="Sonderaufgaben am Abend";
+  const wer=document.createElement("div");wer.className="wer";
+  const body=document.createElement("div");
+  const mk=(id,txt)=>{const b=document.createElement("button");b.type="button";b.textContent=txt;
+    b.onclick=()=>{sonderWer=id;zeichne();};b.dataset.w=id;return b;};
+  const bc=mk("chef","Chef"),bm=mk("commi","Commi");
+  wer.append(bc,bm);
+  function liste(titel,eintraege){
+    const t=document.createElement("h3");t.textContent=titel;body.appendChild(t);
+    if(!eintraege||!eintraege.length){
+      const e=document.createElement("div");e.className="leer";e.textContent="Nichts hinterlegt.";
+      body.appendChild(e);return;
+    }
+    const ul=document.createElement("ul");
+    eintraege.forEach(x=>{const li=document.createElement("li");li.textContent=x;ul.appendChild(li);});
+    body.appendChild(ul);
+  }
+  function zeichne(){
+    bc.classList.toggle("on",sonderWer==="chef");
+    bm.classList.toggle("on",sonderWer==="commi");
+    body.innerHTML="";
+    const d=(SONDER[station]||{})[sonderWer]||{vor:[],nach:[]};
+    liste("Vor dem Service",d.vor);
+    const tr=document.createElement("div");tr.className="tr";body.appendChild(tr);
+    liste("Nach dem Service",d.nach);
+  }
+  const zu=document.createElement("button");zu.className="btn";zu.textContent="Schlie\u00dfen";
+  zu.style.cssText="width:100%;margin-top:16px";zu.onclick=()=>w.remove();
+  sh.append(h,n,wer,body,zu);
+  w.appendChild(sh);
+  w.onclick=e=>{if(e.target===w)w.remove();};
+  document.body.appendChild(w);
+  zeichne();
+}
 const STKL={"I. Station":" stat st-I","II. Station":" stat st-II",
   "III. Station":" stat st-III","Restaurant":" stat st-R"};
 function stKl(lab){return STKL[lab]||"";}
@@ -1243,6 +1325,11 @@ function dpBlock(key,rows){
       }
       const d=document.createElement("div");d.className="dpab"+stKl(r[0]);
       const a=document.createElement("i");a.textContent=r[0]||"";
+      if(SONDER[r[0]]){
+        const ii=document.createElement("span");ii.className="inf";ii.textContent="i";
+        a.appendChild(ii);d.classList.add("klick");
+        d.onclick=()=>sonderAuf(r[0]);
+      }
       const b1=document.createElement("b");b1.textContent=m[1]?m[1].trim():"\u2013";
       const b2=document.createElement("b");b2.textContent=m[2]?m[2].trim():"\u2013";
       d.append(a,b1,b2);c.appendChild(d);
